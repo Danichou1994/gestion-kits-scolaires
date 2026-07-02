@@ -30,7 +30,7 @@ COPY . /var/www/html
 RUN if [ -f /var/www/html/.env.example ]; then cp /var/www/html/.env.example /var/www/html/.env; fi
 
 # Créer le fichier de base de données SQLite
-RUN touch /var/www/html/database/database.sqlite
+RUN mkdir -p /var/www/html/database && touch /var/www/html/database/database.sqlite
 
 # Installer les dépendances
 RUN composer install --no-dev --prefer-dist --ignore-platform-req=php
@@ -41,7 +41,10 @@ RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/bootstrap/cache \
     && chmod -R 777 /var/www/html/database
 
-# Générer la clé d'application (au cas où)
+# Générer la clé d'application
 RUN php artisan key:generate
+
+# Exécuter les migrations (CRUCIAL !)
+RUN php artisan migrate --force
 
 EXPOSE 80
