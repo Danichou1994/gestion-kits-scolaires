@@ -1,6 +1,6 @@
 FROM php:8.2-apache
 
-# Installer les extensions nécessaires
+# Installer les extensions
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -9,16 +9,15 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     zip \
     unzip \
-    libzip-dev \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
 # Installer Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # Activer Apache mod_rewrite
 RUN a2enmod rewrite
 
-# Configurer le DocumentRoot pour Laravel
+# Configurer le DocumentRoot
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
@@ -26,11 +25,10 @@ RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 # Copier les fichiers du projet
 COPY . /var/www/html
 
-# Supprimer vendor existant et installer
-RUN rm -rf /var/www/html/vendor \
-    && composer install --no-dev --ignore-platform-req=ext-zip --ignore-platform-req=ext-pcntl --ignore-platform-req=ext-exif
+# Installer les dépendances
+RUN composer install --no-dev --prefer-dist
 
-# Configurer les permissions
+# Permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage \
     && chmod -R 755 /var/www/html/bootstrap/cache
