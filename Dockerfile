@@ -26,6 +26,9 @@ RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 # Copier les fichiers du projet
 COPY . /var/www/html
 
+# Créer le fichier .env à partir de .env.example
+RUN if [ -f /var/www/html/.env.example ]; then cp /var/www/html/.env.example /var/www/html/.env; fi
+
 # Installer les dépendances
 RUN composer install --no-dev --prefer-dist --ignore-platform-req=php
 
