@@ -9,7 +9,8 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     zip \
     unzip \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+    libzip-dev \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
 # Installer Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -25,8 +26,9 @@ RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 # Copier les fichiers du projet
 COPY . /var/www/html
 
-# Installer les dépendances
-RUN composer install --no-dev
+# Supprimer vendor existant et installer
+RUN rm -rf /var/www/html/vendor \
+    && composer install --no-dev --ignore-platform-req=ext-zip --ignore-platform-req=ext-pcntl --ignore-platform-req=ext-exif
 
 # Configurer les permissions
 RUN chown -R www-data:www-data /var/www/html \
