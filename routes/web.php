@@ -7,9 +7,9 @@ use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\KitController;
 use App\Http\Controllers\VenteController;
 use App\Http\Controllers\EcheanceController;
-use App\Exports\ClientsExcelExport;
-use App\Exports\VentesExcelExport;
-use App\Exports\EcheancesExcelExport;
+use App\Exports\ClientsExportExcel;
+use App\Exports\VentesExportExcel;
+use App\Exports\EcheancesExportExcel;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 // Page d'accueil
@@ -28,15 +28,15 @@ Route::get('/echeances/{echeance}/marquer-retard', [EcheanceController::class, '
 
 // ========== EXPORTS EXCEL ==========
 Route::get('/clients/export-excel', function () {
-    return ClientsExcelExport::download();
+    return ClientsExportExcel::download();
 })->name('clients.export-excel');
 
 Route::get('/ventes/export-excel', function () {
-    return VentesExcelExport::download();
+    return VentesExportExcel::download();
 })->name('ventes.export-excel');
 
 Route::get('/echeances/export-excel', function () {
-    return EcheancesExcelExport::download();
+    return EcheancesExportExcel::download();
 })->name('echeances.export-excel');
 
 // ========== EXPORTS PDF ==========
@@ -57,3 +57,12 @@ Route::get('/echeances/export-pdf', function () {
     $pdf = Pdf::loadView('pdf.echeances', compact('echeances'));
     return $pdf->download('echeances-' . date('Y-m-d') . '.pdf');
 })->name('echeances.export-pdf');
+
+// Route de test
+Route::get('/test-routes', function () {
+    $routes = [];
+    foreach (Route::getRoutes() as $route) {
+        $routes[] = $route->uri();
+    }
+    return response()->json($routes);
+});
