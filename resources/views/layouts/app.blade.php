@@ -10,32 +10,36 @@
 <body>
     <div class="min-h-screen bg-gray-100">
         <!-- Navigation -->
-        <nav class="bg-white shadow-lg">
-            <div class="max-w-7xl mx-auto px-4">
-                <div class="flex justify-between h-16">
-                    <div class="flex space-x-8">
-                        <a href="{{ route('dashboard') }}" class="flex items-center text-gray-700 hover:text-blue-600">
-                            🏠 Accueil
-                        </a>
-                        <a href="{{ route('clients.index') }}" class="flex items-center text-gray-700 hover:text-blue-600">
-                            👥 Clients
-                        </a>
-                        <a href="{{ route('articles.index') }}" class="flex items-center text-gray-700 hover:text-blue-600">
-                            📦 Articles
-                        </a>
-                        <a href="{{ route('kits.index') }}" class="flex items-center text-gray-700 hover:text-blue-600">
-                            📦 Kits
-                        </a>
-                        <a href="{{ route('ventes.index') }}" class="flex items-center text-gray-700 hover:text-blue-600">
-                            🛒 Ventes
-                        </a>
-                        <a href="{{ route('echeances.index') }}" class="flex items-center text-gray-700 hover:text-blue-600">
-                            📅 Échéances
-                        </a>
-                    </div>
-                </div>
+        <!-- Navigation -->
+<nav class="bg-gradient-to-r from-blue-600 to-blue-800 shadow-lg">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="flex justify-between h-16">
+            <div class="flex items-center">
+                <span class="text-white font-bold text-xl">📚 Gestion Kits</span>
             </div>
-        </nav>
+            <div class="flex items-center space-x-1 md:space-x-4 overflow-x-auto">
+                <a href="{{ route('dashboard') }}" class="text-white hover:bg-blue-700 px-3 py-2 rounded-lg text-sm transition duration-300 whitespace-nowrap">
+                    🏠 Accueil
+                </a>
+                <a href="{{ route('clients.index') }}" class="text-white hover:bg-blue-700 px-3 py-2 rounded-lg text-sm transition duration-300 whitespace-nowrap">
+                    👥 Clients
+                </a>
+                <a href="{{ route('articles.index') }}" class="text-white hover:bg-blue-700 px-3 py-2 rounded-lg text-sm transition duration-300 whitespace-nowrap">
+                    📦 Articles
+                </a>
+                <a href="{{ route('kits.index') }}" class="text-white hover:bg-blue-700 px-3 py-2 rounded-lg text-sm transition duration-300 whitespace-nowrap">
+                    🎒 Kits
+                </a>
+                <a href="{{ route('ventes.index') }}" class="text-white hover:bg-blue-700 px-3 py-2 rounded-lg text-sm transition duration-300 whitespace-nowrap">
+                    🛒 Ventes
+                </a>
+                <a href="{{ route('echeances.index') }}" class="text-white hover:bg-blue-700 px-3 py-2 rounded-lg text-sm transition duration-300 whitespace-nowrap">
+                    📅 Échéances
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
 
         <!-- Messages de succès -->
         @if(session('success'))
