@@ -1,24 +1,20 @@
-<?php
-
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ClientController;
-use App\Http\Controllers\ArticleController;
-use App\Http\Controllers\KitController;
-use App\Http\Controllers\VenteController;
-use App\Http\Controllers\EcheanceController;
-
-Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-
-Route::resource('clients', ClientController::class);
-Route::resource('articles', ArticleController::class);
-Route::resource('kits', KitController::class);
-Route::resource('ventes', VenteController::class);
-Route::resource('echeances', EcheanceController::class);
-// Routes pour les actions spéciales des échéances
-Route::get('/echeances/{echeance}/marquer-payee', [App\Http\Controllers\EcheanceController::class, 'marquerPayee'])->name('echeances.marquerPayee');
-Route::get('/echeances/{echeance}/marquer-retard', [App\Http\Controllers\EcheanceController::class, 'marquerRetard'])->name('echeances.marquerRetard');
+use App\Exports\ClientsExcelExport;
+use App\Exports\VentesExcelExport;
+use App\Exports\EcheancesExcelExport;
 use Barryvdh\DomPDF\Facade\Pdf;
+
+// === EXPORTS EXCEL ===
+Route::get('/clients/export-excel', function () {
+    return ClientsExcelExport::download();
+})->name('clients.export-excel');
+
+Route::get('/ventes/export-excel', function () {
+    return VentesExcelExport::download();
+})->name('ventes.export-excel');
+
+Route::get('/echeances/export-excel', function () {
+    return EcheancesExcelExport::download();
+})->name('echeances.export-excel');
 
 // === EXPORTS PDF ===
 Route::get('/clients/export-pdf', function () {
