@@ -1,6 +1,6 @@
-FROM php:8.2-apache
+FROM php:8.4-apache
 
-# Installer les extensions
+# Installer les extensions nécessaires
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -9,15 +9,16 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     zip \
     unzip \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+    libzip-dev \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
 # Installer Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Activer Apache mod_rewrite
 RUN a2enmod rewrite
 
-# Configurer le DocumentRoot
+# Configurer le DocumentRoot pour Laravel
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
@@ -26,11 +27,14 @@ RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 COPY . /var/www/html
 
 # Installer les dépendances
-RUN composer install --no-dev --prefer-dist
+RUN composer install --no-dev --prefer-dist --ignore-platform-req=php
 
-# Permissions
+# Configurer les permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage \
     && chmod -R 755 /var/www/html/bootstrap/cache
+
+# Générer la clé d'application
+RUN php artisan key:generate
 
 EXPOSE 80
