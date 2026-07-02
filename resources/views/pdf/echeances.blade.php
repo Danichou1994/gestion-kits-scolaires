@@ -11,9 +11,6 @@
         td { padding: 8px; border-bottom: 1px solid #ddd; }
         .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
         .total { text-align: right; margin-top: 20px; font-weight: bold; }
-        .statut-paye { color: #16a34a; font-weight: bold; }
-        .statut-attente { color: #d97706; font-weight: bold; }
-        .statut-retard { color: #dc2626; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -37,15 +34,7 @@
                 <td>{{ $echeance->client->prenom }} {{ $echeance->client->nom }}</td>
                 <td>{{ number_format($echeance->montant_dû, 0, ',', ' ') }} F</td>
                 <td>{{ $echeance->date_echeance->format('d/m/Y') }}</td>
-                <td>
-                    @if($echeance->statut == 'paye')
-                        <span class="statut-paye">✅ Payé</span>
-                    @elseif($echeance->statut == 'en_attente')
-                        <span class="statut-attente">⏳ En attente</span>
-                    @else
-                        <span class="statut-retard">⚠️ En retard</span>
-                    @endif
-                </td>
+                <td>{{ $echeance->statut == 'paye' ? 'Payé' : 'En attente' }}</td>
             </tr>
             @endforeach
         </tbody>
