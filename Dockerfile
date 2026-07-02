@@ -25,15 +25,12 @@ RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 # Copier les fichiers du projet
 COPY . /var/www/html
 
-# Installer les dépendances avec plus de mémoire
-RUN composer install --no-dev --optimize-autoloader --ignore-platform-req=ext-zip
+# Installer les dépendances
+RUN composer install --no-dev
 
 # Configurer les permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage \
     && chmod -R 755 /var/www/html/bootstrap/cache
-
-# Générer la clé d'application
-RUN php artisan key:generate
 
 EXPOSE 80
