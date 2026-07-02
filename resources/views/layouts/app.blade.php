@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      @include('laravel-pwa::meta')
+     {{-- @include('laravel-pwa::meta') --}}
     <title>@yield('title', 'Gestion Kits Scolaires')</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -51,6 +51,6 @@
             @yield('content')
         </main>
     </div>
-  @include('laravel-pwa::register')
+ {{-- @include('laravel-pwa::register') --}}
 </body>
 </html>
