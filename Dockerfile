@@ -26,8 +26,11 @@ RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 # Copier les fichiers du projet
 COPY . /var/www/html
 
-# Créer le fichier .env à partir de .env.example
+# Créer le fichier .env
 RUN if [ -f /var/www/html/.env.example ]; then cp /var/www/html/.env.example /var/www/html/.env; fi
+
+# Créer le fichier de base de données SQLite
+RUN touch /var/www/html/database/database.sqlite
 
 # Installer les dépendances
 RUN composer install --no-dev --prefer-dist --ignore-platform-req=php
@@ -35,9 +38,10 @@ RUN composer install --no-dev --prefer-dist --ignore-platform-req=php
 # Configurer les permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage \
-    && chmod -R 755 /var/www/html/bootstrap/cache
+    && chmod -R 755 /var/www/html/bootstrap/cache \
+    && chmod -R 777 /var/www/html/database
 
-# Générer la clé d'application
+# Générer la clé d'application (au cas où)
 RUN php artisan key:generate
 
 EXPOSE 80
