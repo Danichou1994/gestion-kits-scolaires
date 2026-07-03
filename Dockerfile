@@ -33,6 +33,9 @@ RUN cp /var/www/html/.env.production /var/www/html/.env
 # Installer les dépendances
 RUN composer install --no-dev --prefer-dist --ignore-platform-req=php
 
+# Exécuter les migrations
+RUN php artisan migrate --force
+
 # Configurer les permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage \
