@@ -9,6 +9,7 @@ use App\Models\Vente;
 use App\Models\Echeance;
 use Revolution\Google\Sheets\Facades\Sheets;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class GoogleSheetsController extends Controller
 {
@@ -17,64 +18,69 @@ class GoogleSheetsController extends Controller
         return view('google-sheets.index');
     }
 
-    private function ensureJsonFile()
-    {
-        $jsonContent = env('GOOGLE_SERVICE_ACCOUNT_JSON');
-        
-        if (!$jsonContent) {
-            throw new \Exception('La variable GOOGLE_SERVICE_ACCOUNT_JSON n\'est pas définie.');
-        }
-        
-        $path = storage_path('app/google/service-account.json');
-        if (!is_dir(dirname($path))) {
-            mkdir(dirname($path), 0777, true);
-        }
-        file_put_contents($path, $jsonContent);
-        
-        return $path;
-    }
-
     public function exportAll()
     {
         try {
-            $this->ensureJsonFile();
+            // === CRÉER LE FICHIER JSON SI NÉCESSAIRE ===
+            $jsonContent = env('GOOGLE_SERVICE_ACCOUNT_JSON');
+            $path = storage_path('app/google/service-account.json');
             
-            // Clients
+            if ($jsonContent) {
+                // Créer le dossier
+                if (!is_dir(dirname($path))) {
+                    mkdir(dirname($path), 0777, true);
+                }
+                // Écrire le fichier
+                file_put_contents($path, $jsonContent);
+            }
+            
+            // Vérifier que le fichier existe
+            if (!file_exists($path)) {
+                return redirect()->back()->with('error', '❌ Fichier JSON introuvable. Vérifie que GOOGLE_SERVICE_ACCOUNT_JSON est définie sur Render.');
+            }
+
+            // === CLIENTS ===
             $clients = Client::all();
             if ($clients->count() > 0) {
                 $rows = $clients->map(function($client) {
                     return [
-                        $client->id, $client->nom, $client->prenom,
-                        $client->telephone, $client->adresse ?? '-',
+                        $client->id,
+                        $client->nom,
+                        $client->prenom,
+                        $client->telephone,
+                        $client->adresse ?? '-',
                         $client->quartier ?? '-',
                         $client->created_at->format('d/m/Y')
                     ];
                 })->toArray();
 
-                Sheets::spreadsheet(env('GOOGLE_SHEETS_SPREADSHEET_ID'))
+                Sheets::spreadsheet(config('google-sheets.spreadsheet_id'))
                     ->sheet('Clients')
                     ->clear()
                     ->append($rows);
             }
 
-            // Articles
+            // === ARTICLES ===
             $articles = Article::all();
             if ($articles->count() > 0) {
                 $rows = $articles->map(function($article) {
                     return [
-                        $article->id, $article->nom_article,
-                        $article->prix_unitaire, $article->categorie,
-                        $article->stock, $article->seuil_alerte
+                        $article->id,
+                        $article->nom_article,
+                        $article->prix_unitaire,
+                        $article->categorie,
+                        $article->stock,
+                        $article->seuil_alerte
                     ];
                 })->toArray();
 
-                Sheets::spreadsheet(env('GOOGLE_SHEETS_SPREADSHEET_ID'))
+                Sheets::spreadsheet(config('google-sheets.spreadsheet_id'))
                     ->sheet('Articles')
                     ->clear()
                     ->append($rows);
             }
 
-            // Kits
+            // === KITS ===
             $kits = Kit::with('articles')->get();
             if ($kits->count() > 0) {
                 $rows = $kits->map(function($kit) {
@@ -83,19 +89,21 @@ class GoogleSheetsController extends Controller
                     })->implode(', ');
                     
                     return [
-                        $kit->id, $kit->nom_kit,
+                        $kit->id,
+                        $kit->nom_kit,
                         $kit->description ?? '-',
-                        $kit->prix_total, $articlesList
+                        $kit->prix_total,
+                        $articlesList
                     ];
                 })->toArray();
 
-                Sheets::spreadsheet(env('GOOGLE_SHEETS_SPREADSHEET_ID'))
+                Sheets::spreadsheet(config('google-sheets.spreadsheet_id'))
                     ->sheet('Kits')
                     ->clear()
                     ->append($rows);
             }
 
-            // Ventes
+            // === VENTES ===
             $ventes = Vente::with(['client', 'kit'])->get();
             if ($ventes->count() > 0) {
                 $rows = $ventes->map(function($vente) {
@@ -104,20 +112,23 @@ class GoogleSheetsController extends Controller
                         $vente->id,
                         $vente->client->nom . ' ' . $vente->client->prenom,
                         $vente->kit->nom_kit ?? 'N/A',
-                        $vente->montant_total, $vente->acompte,
-                        $vente->solde, $vente->nb_mensualites,
-                        $vente->montant_mensualite, $statut,
+                        $vente->montant_total,
+                        $vente->acompte,
+                        $vente->solde,
+                        $vente->nb_mensualites,
+                        $vente->montant_mensualite,
+                        $statut,
                         $vente->date_vente->format('d/m/Y')
                     ];
                 })->toArray();
 
-                Sheets::spreadsheet(env('GOOGLE_SHEETS_SPREADSHEET_ID'))
+                Sheets::spreadsheet(config('google-sheets.spreadsheet_id'))
                     ->sheet('Ventes')
                     ->clear()
                     ->append($rows);
             }
 
-            // Echeances
+            // === ÉCHÉANCES ===
             $echeances = Echeance::with(['client', 'vente'])->get();
             if ($echeances->count() > 0) {
                 $rows = $echeances->map(function($echeance) {
@@ -133,71 +144,13 @@ class GoogleSheetsController extends Controller
                     ];
                 })->toArray();
 
-                Sheets::spreadsheet(env('GOOGLE_SHEETS_SPREADSHEET_ID'))
+                Sheets::spreadsheet(config('google-sheets.spreadsheet_id'))
                     ->sheet('Echeances')
                     ->clear()
                     ->append($rows);
             }
 
             return redirect()->back()->with('success', '✅ Toutes les données ont été synchronisées avec Google Sheets !');
-
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', '❌ Erreur : ' . $e->getMessage());
-        }
-    }
-
-    public function exportClients()
-    {
-        try {
-            $this->ensureJsonFile();
-            
-            $clients = Client::all();
-            $rows = $clients->map(function($client) {
-                return [
-                    $client->id, $client->nom, $client->prenom,
-                    $client->telephone, $client->adresse ?? '-',
-                    $client->quartier ?? '-',
-                    $client->created_at->format('d/m/Y')
-                ];
-            })->toArray();
-
-            Sheets::spreadsheet(env('GOOGLE_SHEETS_SPREADSHEET_ID'))
-                ->sheet('Clients')
-                ->clear()
-                ->append($rows);
-
-            return redirect()->back()->with('success', '✅ Clients exportés avec succès !');
-
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', '❌ Erreur : ' . $e->getMessage());
-        }
-    }
-
-    public function exportVentes()
-    {
-        try {
-            $this->ensureJsonFile();
-            
-            $ventes = Vente::with(['client', 'kit'])->get();
-            $rows = $ventes->map(function($vente) {
-                $statut = $vente->statut == 'en_cours' ? 'En cours' : ($vente->statut == 'termine' ? 'Terminé' : 'Annulé');
-                return [
-                    $vente->id,
-                    $vente->client->nom . ' ' . $vente->client->prenom,
-                    $vente->kit->nom_kit ?? 'N/A',
-                    $vente->montant_total, $vente->acompte,
-                    $vente->solde, $vente->nb_mensualites,
-                    $statut,
-                    $vente->date_vente->format('d/m/Y')
-                ];
-            })->toArray();
-
-            Sheets::spreadsheet(env('GOOGLE_SHEETS_SPREADSHEET_ID'))
-                ->sheet('Ventes')
-                ->clear()
-                ->append($rows);
-
-            return redirect()->back()->with('success', '✅ Ventes exportées avec succès !');
 
         } catch (\Exception $e) {
             return redirect()->back()->with('error', '❌ Erreur : ' . $e->getMessage());
