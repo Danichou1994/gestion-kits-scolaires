@@ -27,12 +27,8 @@ RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 # Copier les fichiers du projet
 COPY . /var/www/html
 
-# Créer le fichier .env avec la clé depuis l'environnement
-RUN echo "APP_ENV=${APP_ENV:-production}" > /var/www/html/.env && \
-    echo "APP_DEBUG=${APP_DEBUG:-false}" >> /var/www/html/.env && \
-    echo "APP_KEY=${APP_KEY}" >> /var/www/html/.env && \
-    echo "DB_CONNECTION=${DB_CONNECTION:-pgsql}" >> /var/www/html/.env && \
-    echo "DATABASE_URL=${DATABASE_URL}" >> /var/www/html/.env
+# Copier le fichier .env.production en .env
+RUN cp /var/www/html/.env.production /var/www/html/.env
 
 # Installer les dépendances
 RUN composer install --no-dev --prefer-dist --ignore-platform-req=php
@@ -40,6 +36,7 @@ RUN composer install --no-dev --prefer-dist --ignore-platform-req=php
 # Configurer les permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage \
-    && chmod -R 755 /var/www/html/bootstrap/cache
+    && chmod -R 755 /var/www/html/bootstrap/cache \
+    && chmod -R 755 /var/www/html
 
 EXPOSE 80
