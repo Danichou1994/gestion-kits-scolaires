@@ -15,18 +15,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 // Page d'accueil
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-// Ressources CRUD
-Route::resource('clients', ClientController::class);
-Route::resource('articles', ArticleController::class);
-Route::resource('kits', KitController::class);
-Route::resource('ventes', VenteController::class);
-Route::resource('echeances', EcheanceController::class);
-
-// Actions spéciales pour les échéances
-Route::get('/echeances/{echeance}/marquer-payee', [EcheanceController::class, 'marquerPayee'])->name('echeances.marquerPayee');
-Route::get('/echeances/{echeance}/marquer-retard', [EcheanceController::class, 'marquerRetard'])->name('echeances.marquerRetard');
-
-// ========== EXPORTS EXCEL ==========
+// ========== EXPORTS EXCEL (DOIVENT ÊTRE AVANT LES RESSOURCES) ==========
 Route::get('/clients/export-excel', function () {
     return ClientsExportExcel::download();
 })->name('clients.export-excel');
@@ -39,7 +28,7 @@ Route::get('/echeances/export-excel', function () {
     return EcheancesExportExcel::download();
 })->name('echeances.export-excel');
 
-// ========== EXPORTS PDF ==========
+// ========== EXPORTS PDF (DOIVENT ÊTRE AVANT LES RESSOURCES) ==========
 Route::get('/clients/export-pdf', function () {
     $clients = App\Models\Client::all();
     $pdf = Pdf::loadView('pdf.clients', compact('clients'));
@@ -57,6 +46,17 @@ Route::get('/echeances/export-pdf', function () {
     $pdf = Pdf::loadView('pdf.echeances', compact('echeances'));
     return $pdf->download('echeances-' . date('Y-m-d') . '.pdf');
 })->name('echeances.export-pdf');
+
+// ========== RESSOURCES CRUD ==========
+Route::resource('clients', ClientController::class);
+Route::resource('articles', ArticleController::class);
+Route::resource('kits', KitController::class);
+Route::resource('ventes', VenteController::class);
+Route::resource('echeances', EcheanceController::class);
+
+// Actions spéciales pour les échéances
+Route::get('/echeances/{echeance}/marquer-payee', [EcheanceController::class, 'marquerPayee'])->name('echeances.marquerPayee');
+Route::get('/echeances/{echeance}/marquer-retard', [EcheanceController::class, 'marquerRetard'])->name('echeances.marquerRetard');
 
 // Route de test
 Route::get('/test-routes', function () {
