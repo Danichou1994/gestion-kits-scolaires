@@ -27,8 +27,15 @@ RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 # Copier les fichiers du projet
 COPY . /var/www/html
 
-# Créer le fichier .env
-RUN if [ -f /var/www/html/.env.example ]; then cp /var/www/html/.env.example /var/www/html/.env; fi
+# Créer le fichier .env à partir des variables d'environnement
+RUN if [ -f /var/www/html/.env.example ]; then \
+        cp /var/www/html/.env.example /var/www/html/.env; \
+    else \
+        echo "APP_ENV=production" > /var/www/html/.env; \
+        echo "APP_DEBUG=false" >> /var/www/html/.env; \
+        echo "APP_KEY=" >> /var/www/html/.env; \
+        echo "DB_CONNECTION=pgsql" >> /var/www/html/.env; \
+    fi
 
 # Installer les dépendances
 RUN composer install --no-dev --prefer-dist --ignore-platform-req=php
@@ -36,9 +43,10 @@ RUN composer install --no-dev --prefer-dist --ignore-platform-req=php
 # Configurer les permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage \
-    && chmod -R 755 /var/www/html/bootstrap/cache
+    && chmod -R 755 /var/www/html/bootstrap/cache \
+    && chmod -R 777 /var/www/html
 
-# Générer la clé d'application
+# Générer la clé d'application (utilisera les variables d'env)
 RUN php artisan key:generate
 
 EXPOSE 80
