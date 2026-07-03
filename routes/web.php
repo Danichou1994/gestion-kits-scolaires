@@ -66,3 +66,9 @@ Route::get('/test-routes', function () {
     }
     return response()->json($routes);
 });
+use App\Http\Controllers\RapportController;
+
+// ========== RAPPORT COMPLET ==========
+Route::get('/rapport', [RapportController::class, 'index'])->name('rapport.index');
+Route::get('/rapport/pdf', [RapportController::class, 'exportPDF'])->name('rapport.pdf');
+Route::get('/rapport/excel', [RapportController::class, 'exportExcel'])->name('rapport.excel');
