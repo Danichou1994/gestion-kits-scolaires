@@ -75,3 +75,10 @@ Route::get('/test-routes', function () {
     }
     return response()->json($routes);
 });
+use App\Http\Controllers\GoogleSheetsController;
+
+// Google Sheets
+Route::get('/google-sheets', [GoogleSheetsController::class, 'index'])->name('google-sheets.index');
+Route::get('/google-sheets/export-all', [GoogleSheetsController::class, 'exportAll'])->name('google-sheets.export-all');
+Route::get('/google-sheets/export-clients', [GoogleSheetsController::class, 'exportClients'])->name('google-sheets.export-clients');
+Route::get('/google-sheets/export-ventes', [GoogleSheetsController::class, 'exportVentes'])->name('google-sheets.export-ventes');

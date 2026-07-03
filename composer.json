@@ -7,10 +7,12 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "amazingbv/laravel-google-sheets-database-driver": "^1.0",
         "barryvdh/laravel-dompdf": "^3.1",
         "devrabiul/laravel-pwa-kit": "^1.1",
         "laravel/framework": "^13.8",
         "laravel/tinker": "^3.0",
+        "revolution/laravel-google-sheets": "^7.2",
         "spatie/simple-excel": "^3.10"
     },
     "require-dev": {
