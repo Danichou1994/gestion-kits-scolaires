@@ -41,6 +41,9 @@
                        <a href="{{ route('google-sheets.index') }}" class="text-white hover:bg-blue-700 px-3 py-2 rounded-lg text-sm transition duration-300 whitespace-nowrap">
                            📊 Google Sheets
                        </a>
+                       <a href="{{ route('google-sheets.index') }}" class="text-white hover:bg-blue-700 px-3 py-2 rounded-lg text-sm transition duration-300 whitespace-nowrap">
+                          📊 Google Sheets
+                       </a>
                     </div>
                 </div>
             </div>

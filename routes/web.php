@@ -8,6 +8,7 @@ use App\Http\Controllers\KitController;
 use App\Http\Controllers\VenteController;
 use App\Http\Controllers\EcheanceController;
 use App\Http\Controllers\RapportController;
+use App\Http\Controllers\GoogleSheetsController;
 use App\Exports\ClientsExportExcel;
 use App\Exports\VentesExportExcel;
 use App\Exports\EcheancesExportExcel;
@@ -56,6 +57,10 @@ Route::get('/rapport/excel', [RapportController::class, 'exportExcel'])->name('r
 // ========== FACTURE ==========
 Route::get('/ventes/{vente}/facture', [VenteController::class, 'facture'])->name('ventes.facture');
 
+// ========== GOOGLE SHEETS ==========
+Route::get('/google-sheets', [GoogleSheetsController::class, 'index'])->name('google-sheets.index');
+Route::get('/google-sheets/export-all', [GoogleSheetsController::class, 'exportAll'])->name('google-sheets.export-all');
+
 // ========== RESSOURCES CRUD ==========
 Route::resource('clients', ClientController::class);
 Route::resource('articles', ArticleController::class);
@@ -75,10 +80,3 @@ Route::get('/test-routes', function () {
     }
     return response()->json($routes);
 });
-use App\Http\Controllers\GoogleSheetsController;
-
-// Google Sheets
-Route::get('/google-sheets', [GoogleSheetsController::class, 'index'])->name('google-sheets.index');
-Route::get('/google-sheets/export-all', [GoogleSheetsController::class, 'exportAll'])->name('google-sheets.export-all');
-Route::get('/google-sheets/export-clients', [GoogleSheetsController::class, 'exportClients'])->name('google-sheets.export-clients');
-Route::get('/google-sheets/export-ventes', [GoogleSheetsController::class, 'exportVentes'])->name('google-sheets.export-ventes');

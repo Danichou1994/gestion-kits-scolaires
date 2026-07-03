@@ -9,7 +9,6 @@ use App\Models\Vente;
 use App\Models\Echeance;
 use Revolution\Google\Sheets\Facades\Sheets;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class GoogleSheetsController extends Controller
 {
@@ -21,25 +20,22 @@ class GoogleSheetsController extends Controller
     public function exportAll()
     {
         try {
-            // === CRÉER LE FICHIER JSON SI NÉCESSAIRE ===
+            // === CRÉER LE FICHIER JSON À PARTIR DE LA VARIABLE D'ENVIRONNEMENT ===
             $jsonContent = env('GOOGLE_SERVICE_ACCOUNT_JSON');
             $path = storage_path('app/google/service-account.json');
             
             if ($jsonContent) {
-                // Créer le dossier
                 if (!is_dir(dirname($path))) {
                     mkdir(dirname($path), 0777, true);
                 }
-                // Écrire le fichier
                 file_put_contents($path, $jsonContent);
             }
             
-            // Vérifier que le fichier existe
             if (!file_exists($path)) {
                 return redirect()->back()->with('error', '❌ Fichier JSON introuvable. Vérifie que GOOGLE_SERVICE_ACCOUNT_JSON est définie sur Render.');
             }
 
-            // === CLIENTS ===
+            // === EXPORTER LES CLIENTS ===
             $clients = Client::all();
             if ($clients->count() > 0) {
                 $rows = $clients->map(function($client) {
@@ -54,13 +50,13 @@ class GoogleSheetsController extends Controller
                     ];
                 })->toArray();
 
-                Sheets::spreadsheet(config('google-sheets.spreadsheet_id'))
+                Sheets::spreadsheet(env('GOOGLE_SHEETS_SPREADSHEET_ID'))
                     ->sheet('Clients')
                     ->clear()
                     ->append($rows);
             }
 
-            // === ARTICLES ===
+            // === EXPORTER LES ARTICLES ===
             $articles = Article::all();
             if ($articles->count() > 0) {
                 $rows = $articles->map(function($article) {
@@ -74,13 +70,13 @@ class GoogleSheetsController extends Controller
                     ];
                 })->toArray();
 
-                Sheets::spreadsheet(config('google-sheets.spreadsheet_id'))
+                Sheets::spreadsheet(env('GOOGLE_SHEETS_SPREADSHEET_ID'))
                     ->sheet('Articles')
                     ->clear()
                     ->append($rows);
             }
 
-            // === KITS ===
+            // === EXPORTER LES KITS ===
             $kits = Kit::with('articles')->get();
             if ($kits->count() > 0) {
                 $rows = $kits->map(function($kit) {
@@ -97,13 +93,13 @@ class GoogleSheetsController extends Controller
                     ];
                 })->toArray();
 
-                Sheets::spreadsheet(config('google-sheets.spreadsheet_id'))
+                Sheets::spreadsheet(env('GOOGLE_SHEETS_SPREADSHEET_ID'))
                     ->sheet('Kits')
                     ->clear()
                     ->append($rows);
             }
 
-            // === VENTES ===
+            // === EXPORTER LES VENTES ===
             $ventes = Vente::with(['client', 'kit'])->get();
             if ($ventes->count() > 0) {
                 $rows = $ventes->map(function($vente) {
@@ -122,13 +118,13 @@ class GoogleSheetsController extends Controller
                     ];
                 })->toArray();
 
-                Sheets::spreadsheet(config('google-sheets.spreadsheet_id'))
+                Sheets::spreadsheet(env('GOOGLE_SHEETS_SPREADSHEET_ID'))
                     ->sheet('Ventes')
                     ->clear()
                     ->append($rows);
             }
 
-            // === ÉCHÉANCES ===
+            // === EXPORTER LES ÉCHÉANCES ===
             $echeances = Echeance::with(['client', 'vente'])->get();
             if ($echeances->count() > 0) {
                 $rows = $echeances->map(function($echeance) {
@@ -144,7 +140,7 @@ class GoogleSheetsController extends Controller
                     ];
                 })->toArray();
 
-                Sheets::spreadsheet(config('google-sheets.spreadsheet_id'))
+                Sheets::spreadsheet(env('GOOGLE_SHEETS_SPREADSHEET_ID'))
                     ->sheet('Echeances')
                     ->clear()
                     ->append($rows);

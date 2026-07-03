@@ -26,23 +26,7 @@
                class="bg-blue-600 hover:bg-blue-700 text-white text-center py-6 px-4 rounded-xl transition duration-300">
                 <div class="text-5xl mb-2">🔄</div>
                 <div class="font-bold text-lg">Tout synchroniser</div>
-                <div class="text-sm opacity-80">Toutes les données</div>
-            </a>
-
-            <!-- Clients -->
-            <a href="{{ route('google-sheets.export-clients') }}" 
-               class="bg-green-600 hover:bg-green-700 text-white text-center py-6 px-4 rounded-xl transition duration-300">
-                <div class="text-5xl mb-2">👥</div>
-                <div class="font-bold text-lg">Clients</div>
-                <div class="text-sm opacity-80">Exporter les clients</div>
-            </a>
-
-            <!-- Ventes -->
-            <a href="{{ route('google-sheets.export-ventes') }}" 
-               class="bg-yellow-600 hover:bg-yellow-700 text-white text-center py-6 px-4 rounded-xl transition duration-300">
-                <div class="text-5xl mb-2">🛒</div>
-                <div class="font-bold text-lg">Ventes</div>
-                <div class="text-sm opacity-80">Exporter les ventes</div>
+                <div class="text-sm opacity-80">Clients, Ventes, Kits, Échéances</div>
             </a>
 
             <!-- Lien vers Google Sheets -->
@@ -58,10 +42,9 @@
         <div class="mt-8 p-4 bg-gray-50 rounded-lg">
             <h3 class="font-bold text-gray-700 mb-2">💡 Informations</h3>
             <ul class="text-sm text-gray-600 space-y-1">
-                <li>✅ Les données sont exportées depuis votre base de données</li>
-                <li>✅ Google Sheets est une copie de sauvegarde en lecture</li>
+                <li>✅ Les données sont exportées depuis PostgreSQL</li>
+                <li>✅ Google Sheets est une copie de sauvegarde</li>
                 <li>✅ Vos données originales restent dans PostgreSQL</li>
-                <li>✅ Cliquez sur "Ouvrir Sheets" pour voir les données en direct</li>
             </ul>
         </div>
     </div>
