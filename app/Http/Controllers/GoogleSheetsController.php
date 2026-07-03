@@ -35,7 +35,7 @@ class GoogleSheetsController extends Controller
             })->toArray();
 
             if (!empty($rows)) {
-                Sheets::spreadsheet(env('GOOGLE_SHEETS_SPREADSHEET_ID'))
+                Sheets::spreadsheet(config('google-sheets.spreadsheet_id'))
                     ->sheet('Clients')
                     ->clear()
                     ->append($rows);
