@@ -19,14 +19,20 @@ class GoogleSheetsController extends Controller
 
     public function exportAll()
     {
-        try {
-            // Vérifier si le fichier JSON existe
-            $jsonPath = storage_path('app/google/service-account.json');
+        
             
-            if (!file_exists($jsonPath)) {
-                return redirect()->back()->with('error', '❌ Fichier JSON introuvable. Veuillez placer service-account.json dans storage/app/google/');
+      try {
+        // ====== CRÉER LE FICHIER JSON À PARTIR DE LA VARIABLE D'ENVIRONNEMENT ======
+        $jsonContent = env('GOOGLE_SERVICE_ACCOUNT_JSON');
+        if ($jsonContent) {
+            $path = storage_path('app/google/service-account.json');
+            if (!is_dir(dirname($path))) {
+                mkdir(dirname($path), 0777, true);
             }
-
+            file_put_contents($path, $jsonContent);
+        } else {
+            return redirect()->back()->with('error', '❌ La variable GOOGLE_SERVICE_ACCOUNT_JSON n\'est pas définie sur Render.');
+        }
             // ====== EXPORTER LES CLIENTS ======
             $clients = Client::all();
             if ($clients->count() > 0) {
