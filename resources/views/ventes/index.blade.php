@@ -1,18 +1,21 @@
 @extends('layouts.app')
 
 @section('title', 'Liste des ventes')
-<div class="flex flex-wrap gap-2 mb-4">
-    <a href="{{ route('ventes.export-pdf') }}" 
-       class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition duration-300 flex items-center">
-        📄 Exporter PDF
-    </a>
-</div>
+
 @section('content')
 <div class="flex justify-between items-center mb-6">
     <h1 class="text-2xl font-bold">🛒 Liste des ventes</h1>
-    <a href="{{ route('ventes.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-        + Nouvelle vente
-    </a>
+    <div class="flex flex-wrap gap-2">
+        <a href="{{ route('ventes.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+            + Nouvelle vente
+        </a>
+        <a href="{{ route('ventes.export-excel') }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm transition duration-300 flex items-center">
+            📊 Excel
+        </a>
+        <a href="{{ route('ventes.export-pdf') }}" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition duration-300 flex items-center">
+            📄 PDF
+        </a>
+    </div>
 </div>
 
 <div class="bg-white rounded-lg shadow overflow-hidden">
@@ -48,6 +51,7 @@
                 <td class="px-6 py-3">
                     <a href="{{ route('ventes.show', $vente) }}" class="text-blue-600 hover:underline mr-2">Voir</a>
                     <a href="{{ route('ventes.edit', $vente) }}" class="text-yellow-600 hover:underline mr-2">Modifier</a>
+                    <a href="{{ route('ventes.facture', $vente) }}" class="text-purple-600 hover:underline mr-2" target="_blank">📄 Facture</a>
                     <form action="{{ route('ventes.destroy', $vente) }}" method="POST" class="inline" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette vente ?')">
                         @csrf
                         @method('DELETE')

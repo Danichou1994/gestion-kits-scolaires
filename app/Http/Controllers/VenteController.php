@@ -8,6 +8,7 @@ use App\Models\Kit;
 use App\Models\Echeance;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class VenteController extends Controller
 {
@@ -40,7 +41,6 @@ class VenteController extends Controller
         $nb_mensualites = $request->nb_mensualites;
         $montant_mensualite = $solde / $nb_mensualites;
 
-        // Créer la vente
         $vente = Vente::create([
             'client_id' => $request->client_id,
             'kit_id' => $request->kit_id,
@@ -53,7 +53,6 @@ class VenteController extends Controller
             'date_vente' => $request->date_vente
         ]);
 
-        // Générer les échéances
         $date_echeance = Carbon::parse($request->date_vente);
         for ($i = 1; $i <= $nb_mensualites; $i++) {
             $date_echeance->addMonth();
@@ -97,9 +96,16 @@ class VenteController extends Controller
 
     public function destroy(Vente $vente)
     {
-        // Supprimer les échéances associées
         $vente->echeances()->delete();
         $vente->delete();
         return redirect()->route('ventes.index')->with('success', 'Vente supprimée !');
+    }
+
+    // ====== GÉNÉRER LA FACTURE PDF ======
+    public function facture(Vente $vente)
+    {
+        $vente->load(['client', 'kit.articles', 'echeances']);
+        $pdf = Pdf::loadView('pdf.facture', compact('vente'));
+        return $pdf->download('facture-' . $vente->id . '-' . date('Y-m-d') . '.pdf');
     }
 }

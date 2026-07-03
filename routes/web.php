@@ -7,6 +7,7 @@ use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\KitController;
 use App\Http\Controllers\VenteController;
 use App\Http\Controllers\EcheanceController;
+use App\Http\Controllers\RapportController;
 use App\Exports\ClientsExportExcel;
 use App\Exports\VentesExportExcel;
 use App\Exports\EcheancesExportExcel;
@@ -15,7 +16,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 // Page d'accueil
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-// ========== EXPORTS EXCEL (DOIVENT ÊTRE AVANT LES RESSOURCES) ==========
+// ========== EXPORTS EXCEL ==========
 Route::get('/clients/export-excel', function () {
     return ClientsExportExcel::download();
 })->name('clients.export-excel');
@@ -28,7 +29,7 @@ Route::get('/echeances/export-excel', function () {
     return EcheancesExportExcel::download();
 })->name('echeances.export-excel');
 
-// ========== EXPORTS PDF (DOIVENT ÊTRE AVANT LES RESSOURCES) ==========
+// ========== EXPORTS PDF ==========
 Route::get('/clients/export-pdf', function () {
     $clients = App\Models\Client::all();
     $pdf = Pdf::loadView('pdf.clients', compact('clients'));
@@ -46,6 +47,14 @@ Route::get('/echeances/export-pdf', function () {
     $pdf = Pdf::loadView('pdf.echeances', compact('echeances'));
     return $pdf->download('echeances-' . date('Y-m-d') . '.pdf');
 })->name('echeances.export-pdf');
+
+// ========== RAPPORT COMPLET ==========
+Route::get('/rapport', [RapportController::class, 'index'])->name('rapport.index');
+Route::get('/rapport/pdf', [RapportController::class, 'exportPDF'])->name('rapport.pdf');
+Route::get('/rapport/excel', [RapportController::class, 'exportExcel'])->name('rapport.excel');
+
+// ========== FACTURE ==========
+Route::get('/ventes/{vente}/facture', [VenteController::class, 'facture'])->name('ventes.facture');
 
 // ========== RESSOURCES CRUD ==========
 Route::resource('clients', ClientController::class);
@@ -66,9 +75,3 @@ Route::get('/test-routes', function () {
     }
     return response()->json($routes);
 });
-use App\Http\Controllers\RapportController;
-
-// ========== RAPPORT COMPLET ==========
-Route::get('/rapport', [RapportController::class, 'index'])->name('rapport.index');
-Route::get('/rapport/pdf', [RapportController::class, 'exportPDF'])->name('rapport.pdf');
-Route::get('/rapport/excel', [RapportController::class, 'exportExcel'])->name('rapport.excel');
