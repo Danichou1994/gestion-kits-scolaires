@@ -9,6 +9,7 @@ use App\Models\Vente;
 use App\Models\Echeance;
 use Revolution\Google\Sheets\Facades\Sheets;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class GoogleSheetsController extends Controller
 {
@@ -20,31 +21,18 @@ class GoogleSheetsController extends Controller
     public function exportAll()
     {
         try {
-            // === CRÉER LE FICHIER JSON (2 MÉTHODES) ===
+            // === CRÉER LE FICHIER JSON À PARTIR DE LA CONFIGURATION ===
+            $config = config('google-sheets.service_account');
             $jsonPath = storage_path('app/google/service-account.json');
             
-            // Méthode 1 : Secret File
-            $secretPath = '/etc/secrets/google-credentials.json';
-            if (file_exists($secretPath)) {
-                if (!is_dir(dirname($jsonPath))) {
-                    mkdir(dirname($jsonPath), 0777, true);
-                }
-                copy($secretPath, $jsonPath);
+            if (!is_dir(dirname($jsonPath))) {
+                mkdir(dirname($jsonPath), 0777, true);
             }
             
-            // Méthode 2 : Variable d'environnement
-            if (!file_exists($jsonPath)) {
-                $jsonContent = env('GOOGLE_SERVICE_ACCOUNT_JSON');
-                if ($jsonContent) {
-                    if (!is_dir(dirname($jsonPath))) {
-                        mkdir(dirname($jsonPath), 0777, true);
-                    }
-                    file_put_contents($jsonPath, $jsonContent);
-                }
-            }
+            file_put_contents($jsonPath, json_encode($config, JSON_PRETTY_PRINT));
             
             if (!file_exists($jsonPath)) {
-                return redirect()->back()->with('error', '❌ Fichier JSON introuvable. Vérifie que le Secret File ou la variable GOOGLE_SERVICE_ACCOUNT_JSON est configuré sur Render.');
+                return redirect()->back()->with('error', '❌ Impossible de créer le fichier JSON.');
             }
 
             // === EXPORTER LES CLIENTS ===
