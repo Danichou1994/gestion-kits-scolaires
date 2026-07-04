@@ -20,10 +20,11 @@ class GoogleSheetsController extends Controller
     public function exportAll()
     {
         try {
-            // === LIRE LE FICHIER JSON DEPUIS LE SECRET FILE ===
-            $secretPath = '/etc/secrets/google-credentials.json';
+            // === CRÉER LE FICHIER JSON (2 MÉTHODES) ===
             $jsonPath = storage_path('app/google/service-account.json');
             
+            // Méthode 1 : Secret File
+            $secretPath = '/etc/secrets/google-credentials.json';
             if (file_exists($secretPath)) {
                 if (!is_dir(dirname($jsonPath))) {
                     mkdir(dirname($jsonPath), 0777, true);
@@ -31,8 +32,19 @@ class GoogleSheetsController extends Controller
                 copy($secretPath, $jsonPath);
             }
             
+            // Méthode 2 : Variable d'environnement
             if (!file_exists($jsonPath)) {
-                return redirect()->back()->with('error', '❌ Fichier JSON introuvable. Vérifie que le Secret File est bien configuré sur Render.');
+                $jsonContent = env('GOOGLE_SERVICE_ACCOUNT_JSON');
+                if ($jsonContent) {
+                    if (!is_dir(dirname($jsonPath))) {
+                        mkdir(dirname($jsonPath), 0777, true);
+                    }
+                    file_put_contents($jsonPath, $jsonContent);
+                }
+            }
+            
+            if (!file_exists($jsonPath)) {
+                return redirect()->back()->with('error', '❌ Fichier JSON introuvable. Vérifie que le Secret File ou la variable GOOGLE_SERVICE_ACCOUNT_JSON est configuré sur Render.');
             }
 
             // === EXPORTER LES CLIENTS ===
