@@ -6,7 +6,7 @@
 <div class="max-w-4xl mx-auto">
     <div class="bg-white rounded-lg shadow p-8">
         <h1 class="text-3xl font-bold text-center text-blue-600 mb-4">📊 Google Sheets</h1>
-        <p class="text-center text-gray-600 mb-8">Synchronisez vos données avec Google Sheets pour une visualisation facile</p>
+        <p class="text-center text-gray-600 mb-8">Synchronisez vos données avec Google Sheets</p>
 
         @if(session('success'))
             <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
@@ -21,7 +21,6 @@
         @endif
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <!-- Synchroniser tout -->
             <a href="{{ route('google-sheets.export-all') }}" 
                class="bg-blue-600 hover:bg-blue-700 text-white text-center py-6 px-4 rounded-xl transition duration-300">
                 <div class="text-5xl mb-2">🔄</div>
@@ -29,7 +28,6 @@
                 <div class="text-sm opacity-80">Clients, Ventes, Kits, Échéances</div>
             </a>
 
-            <!-- Lien vers Google Sheets -->
             <a href="https://docs.google.com/spreadsheets/d/{{ env('GOOGLE_SHEETS_SPREADSHEET_ID') }}" 
                target="_blank" 
                class="bg-purple-600 hover:bg-purple-700 text-white text-center py-6 px-4 rounded-xl transition duration-300">
