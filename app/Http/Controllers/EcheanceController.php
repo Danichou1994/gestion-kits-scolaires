@@ -25,67 +25,23 @@ class EcheanceController extends Controller
         
         $echeancesPayees = $echeances->where('statut', 'paye')->count();
         
-        return view('echeances.index', compact('echeances', 'echeancesAJour', 'echeancesRetard', 'echeancesPayees'));
-    }
-
-    public function create()
-    {
-        $ventes = Vente::with('client')->where('statut', 'en_cours')->get();
-        return view('echeances.create', compact('ventes'));
-    }
-
-    public function store(Request $request)
-    {
-        $request->validate([
-            'vente_id' => 'required|exists:ventes,id',
-            'date_echeance' => 'required|date',
-            'montant_dû' => 'required|numeric|min:0'
-        ]);
-
-        $vente = Vente::find($request->vente_id);
+        // Grouper par vente
+        $ventesAvecEcheances = Vente::with(['client', 'echeances'])
+                                   ->whereHas('echeances')
+                                   ->get();
         
-        Echeance::create([
-            'vente_id' => $request->vente_id,
-            'client_id' => $vente->client_id,
-            'date_echeance' => $request->date_echeance,
-            'montant_dû' => $request->montant_dû,
-            'statut' => 'en_attente'
-        ]);
-
-        return redirect()->route('echeances.index')->with('success', 'Échéance ajoutée avec succès !');
+        return view('echeances.index', compact(
+            'echeances', 'echeancesAJour', 'echeancesRetard',
+            'echeancesPayees', 'ventesAvecEcheances'
+        ));
     }
 
-    public function show(Echeance $echeance)
+    public function show(Vente $vente)
     {
-        $echeance->load(['client', 'vente']);
-        return view('echeances.show', compact('echeance'));
+        $vente->load(['client', 'echeances']);
+        return view('echeances.show', compact('vente'));
     }
 
-    public function edit(Echeance $echeance)
-    {
-        $ventes = Vente::with('client')->where('statut', 'en_cours')->get();
-        return view('echeances.edit', compact('echeance', 'ventes'));
-    }
-
-    public function update(Request $request, Echeance $echeance)
-    {
-        $request->validate([
-            'date_echeance' => 'required|date',
-            'montant_dû' => 'required|numeric|min:0',
-            'statut' => 'required|in:en_attente,paye,en_retard'
-        ]);
-
-        $echeance->update($request->all());
-        return redirect()->route('echeances.index')->with('success', 'Échéance modifiée avec succès !');
-    }
-
-    public function destroy(Echeance $echeance)
-    {
-        $echeance->delete();
-        return redirect()->route('echeances.index')->with('success', 'Échéance supprimée !');
-    }
-
-    // Action pour marquer une échéance comme payée
     public function marquerPayee(Echeance $echeance)
     {
         $echeance->update([
@@ -93,7 +49,6 @@ class EcheanceController extends Controller
             'date_paiement' => today()
         ]);
 
-        // Vérifier si toutes les échéances de la vente sont payées
         $vente = $echeance->vente;
         $echeancesRestantes = $vente->echeances()->where('statut', '!=', 'paye')->count();
         
@@ -101,13 +56,12 @@ class EcheanceController extends Controller
             $vente->update(['statut' => 'termine']);
         }
 
-        return redirect()->route('echeances.index')->with('success', 'Échéance marquée comme payée !');
+        return redirect()->route('echeances.index')->with('success', 'Paiement enregistré !');
     }
 
-    // Action pour marquer une échéance comme en retard
     public function marquerRetard(Echeance $echeance)
     {
         $echeance->update(['statut' => 'en_retard']);
-        return redirect()->route('echeances.index')->with('success', 'Échéance marquée comme en retard !');
+        return redirect()->route('echeances.index')->with('success', 'Échéance marquée en retard.');
     }
 }
