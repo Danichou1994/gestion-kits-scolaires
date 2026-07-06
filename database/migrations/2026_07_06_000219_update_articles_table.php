@@ -9,7 +9,6 @@ return new class extends Migration
     public function up()
     {
         Schema::table('articles', function (Blueprint $table) {
-            // Vérifier si les colonnes existent avant de les ajouter
             if (!Schema::hasColumn('articles', 'code_barre')) {
                 $table->string('code_barre')->nullable()->unique()->after('id');
             }
