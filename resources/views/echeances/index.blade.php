@@ -1,105 +1,70 @@
 @extends('layouts.app')
 
-@section('title', 'Gestion des échéances')
-<div class="flex flex-wrap gap-2 mb-4">
-    <a href="{{ route('echeances.export-pdf') }}" 
-       class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm transition duration-300 flex items-center">
-        📄 Exporter PDF
-    </a>
-</div>
+@section('title', 'Échéances')
+
 @section('content')
 <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-bold">📅 Gestion des échéances</h1>
-    <a href="{{ route('echeances.create') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-        + Ajouter une échéance
-    </a>
+    <h1 class="text-2xl font-bold">📅 Échéances</h1>
 </div>
 
-<!-- Statistiques -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-    <div class="bg-green-100 rounded-lg p-4">
-        <div class="text-2xl font-bold text-green-800">{{ $echeancesPayees }}</div>
-        <div class="text-green-600">Payées</div>
+<div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="bg-green-100 p-4 rounded-lg">
+        <span class="text-sm">Payées</span>
+        <div class="text-2xl font-bold text-green-600">{{ $echeancesPayees ?? 0 }}</div>
     </div>
-    <div class="bg-yellow-100 rounded-lg p-4">
-        <div class="text-2xl font-bold text-yellow-800">{{ $echeancesAJour }}</div>
-        <div class="text-yellow-600">À jour</div>
+    <div class="bg-yellow-100 p-4 rounded-lg">
+        <span class="text-sm">En attente</span>
+        <div class="text-2xl font-bold text-yellow-600">{{ $echeancesAJour ?? 0 }}</div>
     </div>
-    <div class="bg-red-100 rounded-lg p-4">
-        <div class="text-2xl font-bold text-red-800">{{ $echeancesRetard }}</div>
-        <div class="text-red-600">En retard</div>
+    <div class="bg-red-100 p-4 rounded-lg">
+        <span class="text-sm">En retard</span>
+        <div class="text-2xl font-bold text-red-600">{{ $echeancesRetard ?? 0 }}</div>
     </div>
 </div>
 
-<!-- Liste des échéances -->
-<div class="bg-white rounded-lg shadow overflow-hidden">
+<!-- Ventes avec échéances -->
+@foreach($ventesAvecEcheances as $vente)
+<div class="bg-white rounded-lg shadow mb-4 overflow-hidden">
+    <div class="bg-gray-50 px-4 py-2 border-b flex justify-between">
+        <span class="font-bold">Vente #{{ $vente->numero_vente }}</span>
+        <span>{{ $vente->client->prenom }} {{ $vente->client->nom }}</span>
+        <span class="text-sm text-gray-600">Total: {{ number_format($vente->montant_total, 0, ',', ' ') }} F</span>
+    </div>
     <table class="w-full">
         <thead class="bg-gray-50">
             <tr>
-                <th class="px-6 py-3 text-left">Client</th>
-                <th class="px-6 py-3 text-left">Montant</th>
-                <th class="px-6 py-3 text-left">Date d'échéance</th>
-                <th class="px-6 py-3 text-left">Statut</th>
-                <th class="px-6 py-3 text-left">Actions</th>
+                <th class="px-4 py-2 text-left">Date</th>
+                <th class="px-4 py-2 text-left">Montant</th>
+                <th class="px-4 py-2 text-left">Statut</th>
+                <th class="px-4 py-2 text-left">Action</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($echeances as $echeance)
+            @foreach($vente->echeances as $echeance)
             <tr class="border-t">
-                <td class="px-6 py-3">{{ $echeance->client->prenom }} {{ $echeance->client->nom }}</td>
-                <td class="px-6 py-3">{{ number_format($echeance->montant_dû, 0, ',', ' ') }} F</td>
-                <td class="px-6 py-3">
-                    {{ $echeance->date_echeance->format('d/m/Y') }}
-                    @if($echeance->date_echeance < today() && $echeance->statut != 'paye')
-                        <span class="text-red-600 ml-2">⚠️</span>
-                    @endif
-                </td>
-                <td class="px-6 py-3">
-                    @if($echeance->statut == 'en_attente')
-                        @if($echeance->date_echeance < today())
-                            <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm">⚠️ En retard</span>
-                        @else
-                            <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-sm">En attente</span>
-                        @endif
-                    @elseif($echeance->statut == 'paye')
-                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">✅ Payé</span>
+                <td class="px-4 py-2">{{ $echeance->date_echeance->format('d/m/Y') }}</td>
+                <td class="px-4 py-2">{{ number_format($echeance->montant_dû, 0, ',', ' ') }} F</td>
+                <td class="px-4 py-2">
+                    @if($echeance->statut == 'paye')
+                        <span class="text-green-600">✅ Payé</span>
+                    @elseif($echeance->statut == 'en_attente')
+                        <span class="text-yellow-600">⏳ En attente</span>
                     @else
-                        <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm">En retard</span>
+                        <span class="text-red-600">⚠️ En retard</span>
                     @endif
                 </td>
-                <td class="px-6 py-3">
-                    <a href="{{ route('echeances.show', $echeance) }}" class="text-blue-600 hover:underline mr-2">Voir</a>
-                    
+                <td class="px-4 py-2">
                     @if($echeance->statut != 'paye')
-                        <a href="{{ route('echeances.marquerPayee', $echeance) }}" 
-                           class="text-green-600 hover:underline mr-2"
-                           onclick="return confirm('Marquer cette échéance comme payée ?')">
-                            ✅ Payer
-                        </a>
-                        @if($echeance->date_echeance < today())
-                            <a href="{{ route('echeances.marquerRetard', $echeance) }}" 
-                               class="text-red-600 hover:underline mr-2"
-                               onclick="return confirm('Marquer cette échéance comme en retard ?')">
-                                ⚠️ Retard
-                            </a>
+                        <a href="{{ route('echeances.payer', $echeance) }}" class="text-green-600 hover:underline text-sm">Payer</a>
+                        @if($echeance->date_echeance < now())
+                            <a href="{{ route('echeances.retard', $echeance) }}" class="text-red-600 hover:underline text-sm ml-2">Retard</a>
                         @endif
                     @endif
-                    
-                    <a href="{{ route('echeances.edit', $echeance) }}" class="text-yellow-600 hover:underline mr-2">Modifier</a>
-                    
-                    <form action="{{ route('echeances.destroy', $echeance) }}" method="POST" class="inline" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette échéance ?')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="text-red-600 hover:underline">Supprimer</button>
-                    </form>
                 </td>
             </tr>
-            @empty
-            <tr>
-                <td colspan="5" class="px-6 py-4 text-center text-gray-500">Aucune échéance enregistrée</td>
-            </tr>
-            @endforelse
+            @endforeach
         </tbody>
     </table>
 </div>
+@endforeach
 @endsection

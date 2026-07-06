@@ -31,7 +31,6 @@ Route::get('/kits/export-csv', [KitController::class, 'exportCSV'])->name('kits.
 // ========== VENTES ==========
 Route::resource('ventes', VenteController::class);
 Route::get('/ventes/{vente}/facture', [VenteController::class, 'facture'])->name('ventes.facture');
-Route::get('/ventes/export-csv', [VenteController::class, 'exportCSV'])->name('ventes.export-csv');
 
 // ========== ÉCHÉANCES ==========
 Route::get('/echeances', [EcheanceController::class, 'index'])->name('echeances.index');
@@ -45,7 +44,7 @@ Route::post('/stock', [StockController::class, 'store'])->name('stock.store');
 Route::get('/stock/export-csv', [StockController::class, 'exportCSV'])->name('stock.export-csv');
 Route::get('/stock/article/{article}', [StockController::class, 'historique'])->name('stock.historique');
 
-// ========== RAPPORT COMPLET ==========
+// ========== RAPPORT ==========
 Route::get('/rapport', [RapportController::class, 'index'])->name('rapport.index');
 Route::get('/rapport/pdf', [RapportController::class, 'exportPDF'])->name('rapport.pdf');
 
