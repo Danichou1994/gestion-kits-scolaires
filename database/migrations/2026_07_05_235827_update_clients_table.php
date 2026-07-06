@@ -9,7 +9,19 @@ return new class extends Migration
     public function up()
     {
         Schema::table('clients', function (Blueprint $table) {
-            $table->string('email')->nullable()->after('telephone');
+            // Vérifier si la colonne email existe déjà
+            if (!Schema::hasColumn('clients', 'email')) {
+                $table->string('email')->nullable()->after('telephone');
+            }
+            
+            // Supprimer l'ancien unique si existe
+            try {
+                $table->dropUnique(['nom', 'prenom', 'telephone']);
+            } catch (\Exception $e) {
+                // L'index n'existe peut-être pas
+            }
+            
+            // Ajouter le nouveau unique
             $table->unique(['nom', 'prenom', 'telephone']);
         });
     }
@@ -18,7 +30,9 @@ return new class extends Migration
     {
         Schema::table('clients', function (Blueprint $table) {
             $table->dropUnique(['nom', 'prenom', 'telephone']);
-            $table->dropColumn('email');
+            if (Schema::hasColumn('clients', 'email')) {
+                $table->dropColumn('email');
+            }
         });
     }
 };

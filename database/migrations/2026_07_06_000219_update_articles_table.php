@@ -9,20 +9,38 @@ return new class extends Migration
     public function up()
     {
         Schema::table('articles', function (Blueprint $table) {
-            $table->string('code_barre')->nullable()->unique()->after('id');
-            $table->decimal('prix_achat', 10, 2)->default(0)->after('prix_unitaire');
-            $table->decimal('prix_vente', 10, 2)->default(0)->after('prix_achat');
-            $table->decimal('benefice', 10, 2)->default(0)->after('prix_vente');
-            $table->string('fournisseur')->nullable()->after('categorie');
-            $table->string('unite_mesure')->default('pièce')->after('fournisseur');
-            $table->string('emplacement')->nullable()->after('unite_mesure');
+            // Vérifier si les colonnes existent avant de les ajouter
+            if (!Schema::hasColumn('articles', 'code_barre')) {
+                $table->string('code_barre')->nullable()->unique()->after('id');
+            }
+            if (!Schema::hasColumn('articles', 'prix_achat')) {
+                $table->decimal('prix_achat', 10, 2)->default(0)->after('prix_unitaire');
+            }
+            if (!Schema::hasColumn('articles', 'prix_vente')) {
+                $table->decimal('prix_vente', 10, 2)->default(0)->after('prix_achat');
+            }
+            if (!Schema::hasColumn('articles', 'benefice')) {
+                $table->decimal('benefice', 10, 2)->default(0)->after('prix_vente');
+            }
+            if (!Schema::hasColumn('articles', 'fournisseur')) {
+                $table->string('fournisseur')->nullable()->after('categorie');
+            }
+            if (!Schema::hasColumn('articles', 'unite_mesure')) {
+                $table->string('unite_mesure')->default('pièce')->after('fournisseur');
+            }
+            if (!Schema::hasColumn('articles', 'emplacement')) {
+                $table->string('emplacement')->nullable()->after('unite_mesure');
+            }
         });
     }
 
     public function down()
     {
         Schema::table('articles', function (Blueprint $table) {
-            $table->dropColumn(['code_barre', 'prix_achat', 'prix_vente', 'benefice', 'fournisseur', 'unite_mesure', 'emplacement']);
+            $table->dropColumn([
+                'code_barre', 'prix_achat', 'prix_vente', 'benefice',
+                'fournisseur', 'unite_mesure', 'emplacement'
+            ]);
         });
     }
 };
