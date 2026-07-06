@@ -40,7 +40,7 @@
             </div>
             <div class="mb-4">
                 <label class="block text-gray-700 mb-2">Motif</label>
-                <input type="text" name="motif" class="w-full border rounded-lg px-3 py-2">
+                <input type="text" name="motif" class="w-full border rounded-lg px-3 py-2" placeholder="Ex: Réapprovisionnement">
             </div>
             <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 w-full">
                 Enregistrer
@@ -72,6 +72,7 @@
 
 <!-- État des stocks -->
 <div class="bg-white rounded-lg shadow overflow-hidden">
+    <h2 class="font-bold text-lg p-4 border-b">📦 État des stocks</h2>
     <table class="w-full">
         <thead class="bg-gray-50">
             <tr>
@@ -79,6 +80,7 @@
                 <th class="px-4 py-2 text-left">Stock</th>
                 <th class="px-4 py-2 text-left">Seuil</th>
                 <th class="px-4 py-2 text-left">Statut</th>
+                <th class="px-4 py-2 text-left">Action</th>
             </tr>
         </thead>
         <tbody>
@@ -93,6 +95,9 @@
                     @else
                         <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">✅ OK</span>
                     @endif
+                </td>
+                <td class="px-4 py-2">
+                    <a href="{{ route('stock.historique', $article) }}" class="text-blue-600 hover:underline text-sm">Historique</a>
                 </td>
             </tr>
             @endforeach
