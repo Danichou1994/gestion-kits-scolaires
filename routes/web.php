@@ -7,72 +7,49 @@ use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\KitController;
 use App\Http\Controllers\VenteController;
 use App\Http\Controllers\EcheanceController;
+use App\Http\Controllers\StockController;
 use App\Http\Controllers\RapportController;
-use App\Http\Controllers\GoogleSheetsController;
-use App\Exports\ClientsExportExcel;
-use App\Exports\VentesExportExcel;
-use App\Exports\EcheancesExportExcel;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 // Page d'accueil
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-// ========== EXPORTS EXCEL ==========
-Route::get('/clients/export-excel', function () {
-    return ClientsExportExcel::download();
-})->name('clients.export-excel');
+// ========== CLIENTS ==========
+Route::resource('clients', ClientController::class);
+Route::get('/clients/export-csv', [ClientController::class, 'exportCSV'])->name('clients.export-csv');
+Route::get('/clients/search', [ClientController::class, 'search'])->name('clients.search');
 
-Route::get('/ventes/export-excel', function () {
-    return VentesExportExcel::download();
-})->name('ventes.export-excel');
+// ========== ARTICLES ==========
+Route::resource('articles', ArticleController::class);
+Route::get('/articles/export-csv', [ArticleController::class, 'exportCSV'])->name('articles.export-csv');
+Route::post('/articles/import-csv', [ArticleController::class, 'importCSV'])->name('articles.import-csv');
 
-Route::get('/echeances/export-excel', function () {
-    return EcheancesExportExcel::download();
-})->name('echeances.export-excel');
+// ========== KITS ==========
+Route::resource('kits', KitController::class);
+Route::get('/kits/export-csv', [KitController::class, 'exportCSV'])->name('kits.export-csv');
 
-// ========== EXPORTS PDF ==========
-Route::get('/clients/export-pdf', function () {
-    $clients = App\Models\Client::all();
-    $pdf = Pdf::loadView('pdf.clients', compact('clients'));
-    return $pdf->download('clients-' . date('Y-m-d') . '.pdf');
-})->name('clients.export-pdf');
+// ========== VENTES ==========
+Route::resource('ventes', VenteController::class);
+Route::get('/ventes/{vente}/facture', [VenteController::class, 'facture'])->name('ventes.facture');
+Route::get('/ventes/export-csv', [VenteController::class, 'exportCSV'])->name('ventes.export-csv');
 
-Route::get('/ventes/export-pdf', function () {
-    $ventes = App\Models\Vente::with(['client', 'kit'])->get();
-    $pdf = Pdf::loadView('pdf.ventes', compact('ventes'));
-    return $pdf->download('ventes-' . date('Y-m-d') . '.pdf');
-})->name('ventes.export-pdf');
+// ========== ÉCHÉANCES ==========
+Route::get('/echeances', [EcheanceController::class, 'index'])->name('echeances.index');
+Route::get('/echeances/vente/{vente}', [EcheanceController::class, 'show'])->name('echeances.show');
+Route::get('/echeances/{echeance}/payer', [EcheanceController::class, 'marquerPayee'])->name('echeances.payer');
+Route::get('/echeances/{echeance}/retard', [EcheanceController::class, 'marquerRetard'])->name('echeances.retard');
 
-Route::get('/echeances/export-pdf', function () {
-    $echeances = App\Models\Echeance::with(['client', 'vente'])->get();
-    $pdf = Pdf::loadView('pdf.echeances', compact('echeances'));
-    return $pdf->download('echeances-' . date('Y-m-d') . '.pdf');
-})->name('echeances.export-pdf');
+// ========== STOCK ==========
+Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
+Route::post('/stock', [StockController::class, 'store'])->name('stock.store');
+Route::get('/stock/export-csv', [StockController::class, 'exportCSV'])->name('stock.export-csv');
+Route::get('/stock/article/{article}', [StockController::class, 'historique'])->name('stock.historique');
 
 // ========== RAPPORT COMPLET ==========
 Route::get('/rapport', [RapportController::class, 'index'])->name('rapport.index');
 Route::get('/rapport/pdf', [RapportController::class, 'exportPDF'])->name('rapport.pdf');
-Route::get('/rapport/excel', [RapportController::class, 'exportExcel'])->name('rapport.excel');
 
-// ========== FACTURE ==========
-Route::get('/ventes/{vente}/facture', [VenteController::class, 'facture'])->name('ventes.facture');
-
-// ========== GOOGLE SHEETS ==========
-Route::get('/google-sheets', [GoogleSheetsController::class, 'index'])->name('google-sheets.index');
-Route::get('/google-sheets/export-all', [GoogleSheetsController::class, 'exportAll'])->name('google-sheets.export-all');
-
-// ========== RESSOURCES CRUD ==========
-Route::resource('clients', ClientController::class);
-Route::resource('articles', ArticleController::class);
-Route::resource('kits', KitController::class);
-Route::resource('ventes', VenteController::class);
-Route::resource('echeances', EcheanceController::class);
-
-// Actions spéciales pour les échéances
-Route::get('/echeances/{echeance}/marquer-payee', [EcheanceController::class, 'marquerPayee'])->name('echeances.marquerPayee');
-Route::get('/echeances/{echeance}/marquer-retard', [EcheanceController::class, 'marquerRetard'])->name('echeances.marquerRetard');
-
-// Route de test
+// ========== TEST ==========
 Route::get('/test-routes', function () {
     $routes = [];
     foreach (Route::getRoutes() as $route) {
