@@ -15,14 +15,6 @@
             <div class="font-bold text-lg">PDF</div>
             <div class="text-sm opacity-80">Rapport complet</div>
         </a>
-
-        <!-- Excel -->
-        <a href="{{ route('rapport.excel') }}" 
-           class="bg-green-600 hover:bg-green-700 text-white text-center py-6 px-4 rounded-xl transition duration-300">
-            <div class="text-5xl mb-2">📊</div>
-            <div class="font-bold text-lg">Excel</div>
-            <div class="text-sm opacity-80">Rapport complet</div>
-        </a>
     </div>
 
     <div class="mt-6 text-center text-gray-500 text-sm">

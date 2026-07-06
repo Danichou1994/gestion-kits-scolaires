@@ -8,7 +8,6 @@ use App\Models\Echeance;
 use App\Models\Kit;
 use App\Models\Article;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Spatie\SimpleExcel\SimpleExcelWriter;
 
 class RapportController extends Controller
 {
@@ -31,6 +30,7 @@ class RapportController extends Controller
 
         return $pdf->download('rapport-complet-' . date('Y-m-d') . '.pdf');
     }
+}
 
     public function exportExcel()
     {
