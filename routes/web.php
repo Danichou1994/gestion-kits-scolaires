@@ -14,23 +14,23 @@ use Barryvdh\DomPDF\Facade\Pdf;
 // Page d'accueil
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-// ========== CLIENTS ==========
-Route::resource('clients', ClientController::class);
+// ========== CLIENTS (EXPORTS AVANT RESOURCE) ==========
 Route::get('/clients/export-csv', [ClientController::class, 'exportCSV'])->name('clients.export-csv');
 Route::get('/clients/search', [ClientController::class, 'search'])->name('clients.search');
+Route::resource('clients', ClientController::class);
 
-// ========== ARTICLES ==========
-Route::resource('articles', ArticleController::class);
+// ========== ARTICLES (EXPORTS AVANT RESOURCE) ==========
 Route::get('/articles/export-csv', [ArticleController::class, 'exportCSV'])->name('articles.export-csv');
 Route::post('/articles/import-csv', [ArticleController::class, 'importCSV'])->name('articles.import-csv');
+Route::resource('articles', ArticleController::class);
 
-// ========== KITS ==========
-Route::resource('kits', KitController::class);
+// ========== KITS (EXPORTS AVANT RESOURCE) ==========
 Route::get('/kits/export-csv', [KitController::class, 'exportCSV'])->name('kits.export-csv');
+Route::resource('kits', KitController::class);
 
-// ========== VENTES ==========
-Route::resource('ventes', VenteController::class);
+// ========== VENTES (EXPORTS AVANT RESOURCE) ==========
 Route::get('/ventes/{vente}/facture', [VenteController::class, 'facture'])->name('ventes.facture');
+Route::resource('ventes', VenteController::class);
 
 // ========== ÉCHÉANCES ==========
 Route::get('/echeances', [EcheanceController::class, 'index'])->name('echeances.index');
