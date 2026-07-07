@@ -11,7 +11,8 @@ class Article extends Model
     protected $fillable = [
         'nom_article', 'code_barre', 'prix_achat', 'prix_vente',
         'prix_unitaire', 'benefice', 'categorie', 'fournisseur',
-        'unite_mesure', 'emplacement', 'stock', 'seuil_alerte'
+        'unite_mesure', 'emplacement', 'stock', 'seuil_alerte',
+        'poids', 'marque', 'description'
     ];
 
     public function kits(): BelongsToMany
@@ -27,5 +28,13 @@ class Article extends Model
     public function getBeneficeTotalAttribute(): float
     {
         return $this->benefice * $this->stock;
+    }
+
+    public function getMargeAttribute(): float
+    {
+        if ($this->prix_achat > 0) {
+            return (($this->prix_vente - $this->prix_achat) / $this->prix_achat) * 100;
+        }
+        return 0;
     }
 }
