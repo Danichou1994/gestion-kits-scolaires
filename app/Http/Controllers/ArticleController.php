@@ -49,7 +49,6 @@ class ArticleController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        // Créer l'article
         $article = Article::create([
             'nom_article' => $request->nom_article,
             'code_barre' => $request->code_barre,
@@ -68,7 +67,6 @@ class ArticleController extends Controller
             'description' => $request->description,
         ]);
 
-        // Enregistrer dans le stock
         if ($request->stock > 0) {
             Stock::create([
                 'article_id' => $article->id,
@@ -207,33 +205,54 @@ class ArticleController extends Controller
         $handle = fopen($file->path(), 'r');
         $header = fgetcsv($handle);
 
-        $count = 0;
-        while (($row = fgetcsv($handle)) !== false) {
-            $data = array_combine($header, $row);
+        // Nettoyer les en-têtes
+        $header = array_map(function($h) {
+            return trim($h);
+        }, $header);
 
-            Article::updateOrCreate(
-                ['code_barre' => $data['Code barre'] ?? null],
-                [
-                    'nom_article' => $data['Nom'],
-                    'categorie' => $data['Catégorie'],
-                    'prix_achat' => $data["Prix d'achat"] ?? 0,
-                    'prix_vente' => $data['Prix de vente'] ?? 0,
-                    'prix_unitaire' => $data['Prix de vente'] ?? 0,
-                    'benefice' => ($data['Prix de vente'] ?? 0) - ($data["Prix d'achat"] ?? 0),
-                    'stock' => $data['Stock'] ?? 0,
-                    'seuil_alerte' => $data['Seuil'] ?? 5,
-                    'unite_mesure' => $data['Unité'] ?? 'pièce',
-                    'fournisseur' => $data['Fournisseur'] ?? null,
-                    'emplacement' => $data['Emplacement'] ?? null,
-                    'poids' => $data['Poids'] ?? null,
-                    'marque' => $data['Marque'] ?? null,
-                    'description' => $data['Description'] ?? null,
-                ]
-            );
-            $count++;
+        $count = 0;
+        $errors = [];
+
+        while (($row = fgetcsv($handle)) !== false) {
+            try {
+                $data = array_combine($header, $row);
+
+                if (empty($data['Nom'])) {
+                    $errors[] = "Ligne " . ($count + 2) . ": Nom manquant";
+                    continue;
+                }
+
+                Article::updateOrCreate(
+                    ['code_barre' => $data['Code barre'] ?? null],
+                    [
+                        'nom_article' => $data['Nom'] ?? '',
+                        'categorie' => $data['Catégorie'] ?? 'Rangement et organisation',
+                        'prix_achat' => floatval($data["Prix d'achat"] ?? 0),
+                        'prix_vente' => floatval($data['Prix de vente'] ?? 0),
+                        'prix_unitaire' => floatval($data['Prix de vente'] ?? 0),
+                        'benefice' => floatval($data['Prix de vente'] ?? 0) - floatval($data["Prix d'achat"] ?? 0),
+                        'stock' => intval($data['Stock'] ?? 0),
+                        'seuil_alerte' => intval($data['Seuil'] ?? 5),
+                        'unite_mesure' => $data['Unité'] ?? 'pièce',
+                        'fournisseur' => $data['Fournisseur'] ?? null,
+                        'emplacement' => $data['Emplacement'] ?? null,
+                        'poids' => !empty($data['Poids']) ? floatval($data['Poids']) : null,
+                        'marque' => $data['Marque'] ?? null,
+                        'description' => $data['Description'] ?? null,
+                    ]
+                );
+                $count++;
+            } catch (\Exception $e) {
+                $errors[] = "Ligne " . ($count + 2) . ": " . $e->getMessage();
+            }
         }
         fclose($handle);
 
-        return redirect()->route('articles.index')->with('success', $count . ' articles importés avec succès !');
+        $message = $count . ' articles importés avec succès !';
+        if (!empty($errors)) {
+            $message .= ' Erreurs: ' . implode('; ', $errors);
+        }
+
+        return redirect()->route('articles.index')->with('success', $message);
     }
 }

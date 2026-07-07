@@ -26,7 +26,7 @@ Route::resource('articles', ArticleController::class);
 // ========== KITS ==========
 Route::get('/kits/export-csv', [KitController::class, 'exportCSV'])->name('kits.export-csv');
 Route::resource('kits', KitController::class);
-Route::post('/articles/import-csv', [ArticleController::class, 'importCSV'])->name('articles.import-csv');
+
 // ========== VENTES ==========
 Route::get('/ventes/{vente}/facture', [VenteController::class, 'facture'])->name('ventes.facture');
 Route::resource('ventes', VenteController::class);
