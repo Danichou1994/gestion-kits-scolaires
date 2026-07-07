@@ -8,11 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Client extends Model
 {
     protected $fillable = [
-        'nom',
-        'prenom', 
-        'telephone',
-        'adresse',
-        'quartier'
+        'nom', 'prenom', 'telephone', 'email', 'adresse', 'quartier'
     ];
 
     public function ventes(): HasMany
@@ -23,5 +19,15 @@ class Client extends Model
     public function echeances(): HasMany
     {
         return $this->hasMany(Echeance::class);
+    }
+
+    public function peutEtreSupprime(): bool
+    {
+        return $this->echeances()->where('statut', '!=', 'paye')->count() === 0;
+    }
+
+    public function getNomCompletAttribute(): string
+    {
+        return $this->prenom . ' ' . $this->nom;
     }
 }

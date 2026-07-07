@@ -33,8 +33,8 @@ class KitController extends Controller
             'nom_kit' => $request->nom_kit,
             'description' => $request->description,
             'reduction' => $request->reduction ?? 0,
-            'prix_livraison' => $request->prix_livraison ?? 0,
-            'prix_carnet' => $request->prix_carnet ?? 0,
+            'frais_livraison' => $request->frais_livraison ?? 0,
+            'frais_carnet' => $request->frais_carnet ?? 0,
         ]);
 
         foreach ($request->articles as $article) {
@@ -42,9 +42,7 @@ class KitController extends Controller
         }
 
         $kit->calculerPrixFinal();
-        $kit->save();
-
-        return redirect()->route('kits.index')->with('success', 'Kit créé avec succès !');
+        return redirect()->route('kits.index')->with('success', 'Kit créé !');
     }
 
     public function show(Kit $kit)
@@ -73,8 +71,8 @@ class KitController extends Controller
             'nom_kit' => $request->nom_kit,
             'description' => $request->description,
             'reduction' => $request->reduction ?? 0,
-            'prix_livraison' => $request->prix_livraison ?? 0,
-            'prix_carnet' => $request->prix_carnet ?? 0,
+            'frais_livraison' => $request->frais_livraison ?? 0,
+            'frais_carnet' => $request->frais_carnet ?? 0,
         ]);
 
         $syncData = [];
@@ -84,15 +82,13 @@ class KitController extends Controller
         $kit->articles()->sync($syncData);
 
         $kit->calculerPrixFinal();
-        $kit->save();
-
-        return redirect()->route('kits.index')->with('success', 'Kit modifié avec succès !');
+        return redirect()->route('kits.index')->with('success', 'Kit modifié !');
     }
 
     public function destroy(Kit $kit)
     {
         if ($kit->ventes()->count() > 0) {
-            return redirect()->route('kits.index')->with('error', 'Ce kit ne peut pas être supprimé car il a des ventes.');
+            return redirect()->route('kits.index')->with('error', 'Ce kit a des ventes.');
         }
         $kit->articles()->detach();
         $kit->delete();
@@ -103,33 +99,29 @@ class KitController extends Controller
     {
         $kits = Kit::with('articles')->get();
         $filename = storage_path('app/temp/kits.csv');
-        
+
         if (!is_dir(dirname($filename))) {
             mkdir(dirname($filename), 0777, true);
         }
-        
+
         $file = fopen($filename, 'w');
-        fputcsv($file, ['ID', 'Nom', 'Description', 'Prix total', 'Réduction', 'Livraison', 'Carnet', 'Prix final', 'Articles']);
-        
+        fputcsv($file, ['ID', 'Nom', 'Total', 'Réduction', 'Livraison', 'Carnet', 'Prix final', 'Articles']);
+
         foreach ($kits as $kit) {
-            $articlesList = $kit->articles->map(function($article) {
-                return $article->nom_article . ' (x' . $article->pivot->quantite . ')';
-            })->implode('; ');
-            
+            $articles = $kit->articles->map(fn($a) => $a->nom_article . ' x' . $a->pivot->quantite)->implode('; ');
             fputcsv($file, [
                 $kit->id,
                 $kit->nom_kit,
-                $kit->description ?? '-',
                 $kit->prix_total,
                 $kit->reduction,
-                $kit->prix_livraison,
-                $kit->prix_carnet,
+                $kit->frais_livraison,
+                $kit->frais_carnet,
                 $kit->prix_final,
-                $articlesList
+                $articles
             ]);
         }
         fclose($file);
-        
+
         return response()->download($filename, 'kits-' . date('Y-m-d') . '.csv')->deleteFileAfterSend(true);
     }
 }

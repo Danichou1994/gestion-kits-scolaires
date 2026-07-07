@@ -35,10 +35,8 @@ class VenteController extends Controller
             'type_vente' => 'required|in:article,kit',
         ]);
 
-        if ($request->type_vente == 'kit') {
-            $request->validate([
-                'kit_id' => 'required|exists:kits,id',
-            ]);
+        if ($request->type_vente === 'kit') {
+            $request->validate(['kit_id' => 'required|exists:kits,id']);
             $kit = Kit::find($request->kit_id);
             $montant_total = $kit->prix_final;
         } else {
@@ -65,37 +63,37 @@ class VenteController extends Controller
             'type_vente' => $request->type_vente,
             'kit_id' => $request->kit_id ?? null,
             'article_id' => $request->article_id ?? null,
-            'quantite_article' => $request->quantite ?? 1,
+            'quantite' => $request->quantite ?? 1,
             'montant_total' => $montant_total,
-            'montant_ht' => $montant_total,
             'acompte' => $acompte,
             'solde' => $solde,
             'nb_mensualites' => $nb_mensualites,
             'montant_mensualite' => $montant_mensualite,
             'statut' => 'en_cours',
+            'mode_paiement' => $request->mode_paiement,
             'date_vente' => $request->date_vente ?? now(),
         ]);
 
-        // Stock sortie si vente article
-        if ($request->type_vente == 'article') {
+        if ($request->type_vente === 'article') {
             $article = Article::find($request->article_id);
+            $stockAvant = $article->stock;
             $article->stock -= $request->quantite;
             $article->save();
 
             Stock::create([
                 'article_id' => $request->article_id,
-                'type_mouvement' => 'sortie',
+                'type' => 'sortie',
                 'quantite' => $request->quantite,
                 'prix_unitaire' => $article->prix_achat,
                 'vente_id' => $vente->id,
-                'motif' => 'Vente #' . $numero,
-                'date_mouvement' => now(),
-                'stock_avant' => $article->stock + $request->quantite,
+                'reference' => $numero,
+                'motif' => 'Vente',
+                'stock_avant' => $stockAvant,
                 'stock_apres' => $article->stock,
+                'date_mouvement' => now(),
             ]);
         }
 
-        // Générer les échéances
         $date_echeance = Carbon::parse($vente->date_vente);
         for ($i = 1; $i <= $nb_mensualites; $i++) {
             $date_echeance->addMonth();

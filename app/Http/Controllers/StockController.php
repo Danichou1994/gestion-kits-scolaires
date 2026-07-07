@@ -25,13 +25,10 @@ class StockController extends Controller
             'article_id' => 'required|exists:articles,id',
             'type_mouvement' => 'required|in:entree,sortie',
             'quantite' => 'required|integer|min:1',
-            'prix_unitaire' => 'nullable|numeric|min:0',
             'motif' => 'nullable|string',
         ]);
 
         $article = Article::find($request->article_id);
-        $prix = $request->prix_unitaire ?? $article->prix_achat;
-        
         $stockAvant = $article->stock;
         
         if ($request->type_mouvement == 'entree') {
@@ -48,14 +45,14 @@ class StockController extends Controller
             'article_id' => $request->article_id,
             'type' => $request->type_mouvement,
             'quantite' => $request->quantite,
-            'prix_unitaire' => $prix,
+            'prix_unitaire' => $article->prix_achat,
             'motif' => $request->motif,
             'date_mouvement' => now(),
             'stock_avant' => $stockAvant,
             'stock_apres' => $article->stock,
         ]);
 
-        return redirect()->route('stock.index')->with('success', 'Mouvement de stock enregistré !');
+        return redirect()->route('stock.index')->with('success', 'Mouvement enregistré !');
     }
 
     public function historique(Article $article)
@@ -68,14 +65,14 @@ class StockController extends Controller
     {
         $stocks = Stock::with(['article', 'vente'])->get();
         $filename = storage_path('app/temp/stocks.csv');
-        
+
         if (!is_dir(dirname($filename))) {
             mkdir(dirname($filename), 0777, true);
         }
-        
+
         $file = fopen($filename, 'w');
-        fputcsv($file, ['ID', 'Article', 'Type', 'Quantité', 'Prix unitaire', 'Stock avant', 'Stock après', 'Motif', 'Vente', 'Date']);
-        
+        fputcsv($file, ['ID', 'Article', 'Type', 'Quantité', 'Prix', 'Avant', 'Après', 'Motif', 'Date']);
+
         foreach ($stocks as $stock) {
             fputcsv($file, [
                 $stock->id,
@@ -86,12 +83,11 @@ class StockController extends Controller
                 $stock->stock_avant,
                 $stock->stock_apres,
                 $stock->motif ?? '-',
-                $stock->vente_id ?? '-',
                 $stock->created_at->format('d/m/Y H:i')
             ]);
         }
         fclose($file);
-        
+
         return response()->download($filename, 'stocks-' . date('Y-m-d') . '.csv')->deleteFileAfterSend(true);
     }
 }

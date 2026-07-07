@@ -7,6 +7,7 @@ use App\Models\Vente;
 use App\Models\Echeance;
 use App\Models\Article;
 use App\Models\Kit;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -16,7 +17,7 @@ class DashboardController extends Controller
         $totalVentes = Vente::count();
         $chiffreAffaires = Vente::sum('montant_total');
         $beneficeTotal = Article::sum('benefice');
-        $valeurStock = Article::sum(\DB::raw('stock * prix_achat'));
+        $valeurStock = Article::sum(DB::raw('stock * prix_achat'));
         
         $echeancesAujourdhui = Echeance::whereDate('date_echeance', today())
                                         ->where('statut', 'en_attente')
@@ -27,7 +28,6 @@ class DashboardController extends Controller
                                     ->count();
         
         $articlesAlerte = Article::whereColumn('stock', '<=', 'seuil_alerte')->count();
-        
         $ventesMois = Vente::whereMonth('date_vente', now()->month)->count();
         
         $topArticles = Article::orderBy('benefice', 'desc')->limit(5)->get();

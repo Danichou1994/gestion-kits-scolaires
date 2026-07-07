@@ -14,27 +14,24 @@ use Barryvdh\DomPDF\Facade\Pdf;
 // Page d'accueil
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
-// ========== CLIENTS (EXPORTS AVANT RESOURCE) ==========
+// ========== CLIENTS ==========
 Route::get('/clients/export-csv', [ClientController::class, 'exportCSV'])->name('clients.export-csv');
-Route::get('/clients/search', [ClientController::class, 'search'])->name('clients.search');
 Route::resource('clients', ClientController::class);
 
-// ========== ARTICLES (EXPORTS AVANT RESOURCE) ==========
+// ========== ARTICLES ==========
 Route::get('/articles/export-csv', [ArticleController::class, 'exportCSV'])->name('articles.export-csv');
-Route::post('/articles/import-csv', [ArticleController::class, 'importCSV'])->name('articles.import-csv');
 Route::resource('articles', ArticleController::class);
 
-// ========== KITS (EXPORTS AVANT RESOURCE) ==========
+// ========== KITS ==========
 Route::get('/kits/export-csv', [KitController::class, 'exportCSV'])->name('kits.export-csv');
 Route::resource('kits', KitController::class);
 
-// ========== VENTES (EXPORTS AVANT RESOURCE) ==========
+// ========== VENTES ==========
 Route::get('/ventes/{vente}/facture', [VenteController::class, 'facture'])->name('ventes.facture');
 Route::resource('ventes', VenteController::class);
 
 // ========== ÉCHÉANCES ==========
 Route::get('/echeances', [EcheanceController::class, 'index'])->name('echeances.index');
-Route::get('/echeances/vente/{vente}', [EcheanceController::class, 'show'])->name('echeances.show');
 Route::get('/echeances/{echeance}/payer', [EcheanceController::class, 'marquerPayee'])->name('echeances.payer');
 Route::get('/echeances/{echeance}/retard', [EcheanceController::class, 'marquerRetard'])->name('echeances.retard');
 
@@ -47,12 +44,3 @@ Route::get('/stock/article/{article}', [StockController::class, 'historique'])->
 // ========== RAPPORT ==========
 Route::get('/rapport', [RapportController::class, 'index'])->name('rapport.index');
 Route::get('/rapport/pdf', [RapportController::class, 'exportPDF'])->name('rapport.pdf');
-
-// ========== TEST ==========
-Route::get('/test-routes', function () {
-    $routes = [];
-    foreach (Route::getRoutes() as $route) {
-        $routes[] = $route->uri();
-    }
-    return response()->json($routes);
-});

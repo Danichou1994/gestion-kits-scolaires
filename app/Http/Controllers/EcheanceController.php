@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Echeance;
 use App\Models\Vente;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
 
 class EcheanceController extends Controller
 {
@@ -25,7 +24,6 @@ class EcheanceController extends Controller
         
         $echeancesPayees = $echeances->where('statut', 'paye')->count();
         
-        // Grouper par vente
         $ventesAvecEcheances = Vente::with(['client', 'echeances'])
                                    ->whereHas('echeances')
                                    ->get();

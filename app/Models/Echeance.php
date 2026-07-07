@@ -8,12 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Echeance extends Model
 {
     protected $fillable = [
-        'vente_id',
-        'client_id',
-        'date_echeance',
-        'montant_dû',
-        'statut',
-        'date_paiement'
+        'vente_id', 'client_id', 'date_echeance',
+        'montant_dû', 'statut', 'date_paiement'
     ];
 
     protected $casts = [
@@ -29,5 +25,10 @@ class Echeance extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function estEnRetard(): bool
+    {
+        return $this->statut === 'en_attente' && $this->date_echeance < now();
     }
 }

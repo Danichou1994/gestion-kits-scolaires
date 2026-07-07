@@ -9,20 +9,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Vente extends Model
 {
     protected $fillable = [
-        'client_id',
-        'kit_id',
-        'montant_total',
-        'acompte',
-        'solde',
-        'nb_mensualites',
-        'montant_mensualite',
-        'statut',
-        'date_vente'
+        'numero_vente', 'client_id', 'type_vente', 'kit_id', 'article_id',
+        'quantite', 'montant_total', 'remise', 'frais_livraison',
+        'frais_carnet', 'acompte', 'solde', 'nb_mensualites',
+        'montant_mensualite', 'statut', 'mode_paiement', 'date_vente'
     ];
 
-    protected $casts = [
-        'date_vente' => 'date',
-    ];
+    protected $casts = ['date_vente' => 'date'];
 
     public function client(): BelongsTo
     {
@@ -34,8 +27,20 @@ class Vente extends Model
         return $this->belongsTo(Kit::class);
     }
 
+    public function article(): BelongsTo
+    {
+        return $this->belongsTo(Article::class);
+    }
+
     public function echeances(): HasMany
     {
         return $this->hasMany(Echeance::class);
+    }
+
+    public static function genererNumero(): string
+    {
+        $last = self::orderBy('id', 'desc')->first();
+        $num = $last ? intval(substr($last->numero_vente, -5)) + 1 : 1;
+        return 'FV-' . date('Ymd') . '-' . str_pad($num, 5, '0', STR_PAD_LEFT);
     }
 }
