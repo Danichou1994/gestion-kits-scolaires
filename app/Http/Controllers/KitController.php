@@ -24,9 +24,15 @@ class KitController extends Controller
     {
         $request->validate([
             'nom_kit' => 'required|unique:kits',
+            'description' => 'nullable|string',
             'articles' => 'required|array|min:1',
             'articles.*.id' => 'required|exists:articles,id',
             'articles.*.quantite' => 'required|integer|min:1',
+            'reduction' => 'nullable|numeric|min:0',
+            'frais_livraison' => 'nullable|numeric|min:0',
+            'frais_carnet' => 'nullable|numeric|min:0',
+            'frais_emballage' => 'nullable|numeric|min:0',
+            'frais_etiquette' => 'nullable|numeric|min:0',
         ]);
 
         $kit = Kit::create([
@@ -35,6 +41,12 @@ class KitController extends Controller
             'reduction' => $request->reduction ?? 0,
             'frais_livraison' => $request->frais_livraison ?? 0,
             'frais_carnet' => $request->frais_carnet ?? 0,
+            'frais_emballage' => $request->frais_emballage ?? 0,
+            'frais_etiquette' => $request->frais_etiquette ?? 0,
+            'en_promotion' => $request->has('en_promotion'),
+            'date_debut_promo' => $request->date_debut_promo,
+            'date_fin_promo' => $request->date_fin_promo,
+            'kit_notes' => $request->kit_notes,
         ]);
 
         foreach ($request->articles as $article) {
@@ -42,7 +54,8 @@ class KitController extends Controller
         }
 
         $kit->calculerPrixFinal();
-        return redirect()->route('kits.index')->with('success', 'Kit créé !');
+
+        return redirect()->route('kits.index')->with('success', 'Kit créé avec succès !');
     }
 
     public function show(Kit $kit)
@@ -73,6 +86,12 @@ class KitController extends Controller
             'reduction' => $request->reduction ?? 0,
             'frais_livraison' => $request->frais_livraison ?? 0,
             'frais_carnet' => $request->frais_carnet ?? 0,
+            'frais_emballage' => $request->frais_emballage ?? 0,
+            'frais_etiquette' => $request->frais_etiquette ?? 0,
+            'en_promotion' => $request->has('en_promotion'),
+            'date_debut_promo' => $request->date_debut_promo,
+            'date_fin_promo' => $request->date_fin_promo,
+            'kit_notes' => $request->kit_notes,
         ]);
 
         $syncData = [];
@@ -82,7 +101,8 @@ class KitController extends Controller
         $kit->articles()->sync($syncData);
 
         $kit->calculerPrixFinal();
-        return redirect()->route('kits.index')->with('success', 'Kit modifié !');
+
+        return redirect()->route('kits.index')->with('success', 'Kit modifié avec succès !');
     }
 
     public function destroy(Kit $kit)
@@ -105,23 +125,63 @@ class KitController extends Controller
         }
 
         $file = fopen($filename, 'w');
-        fputcsv($file, ['ID', 'Nom', 'Total', 'Réduction', 'Livraison', 'Carnet', 'Prix final', 'Articles']);
+        fputcsv($file, ['ID', 'Nom', 'Description', 'Total HT', 'Réduction', 'Livraison', 'Carnet', 'Emballage', 'Étiquette', 'Prix final', 'Promotion', 'Articles']);
 
         foreach ($kits as $kit) {
             $articles = $kit->articles->map(fn($a) => $a->nom_article . ' x' . $a->pivot->quantite)->implode('; ');
             fputcsv($file, [
                 $kit->id,
                 $kit->nom_kit,
+                $kit->description ?? '-',
                 $kit->prix_total,
                 $kit->reduction,
                 $kit->frais_livraison,
                 $kit->frais_carnet,
+                $kit->frais_emballage,
+                $kit->frais_etiquette,
                 $kit->prix_final,
+                $kit->en_promotion ? 'Oui' : 'Non',
                 $articles
             ]);
         }
         fclose($file);
 
         return response()->download($filename, 'kits-' . date('Y-m-d') . '.csv')->deleteFileAfterSend(true);
+    }
+
+    public function calculerPrix(Request $request)
+    {
+        $total = 0;
+        $articles = $request->articles ?? [];
+
+        foreach ($articles as $item) {
+            if (isset($item['id']) && isset($item['quantite'])) {
+                $article = Article::find($item['id']);
+                if ($article) {
+                    $total += $article->prix_vente * $item['quantite'];
+                }
+            }
+        }
+
+        $reduction = $request->reduction ?? 0;
+        $frais_livraison = $request->frais_livraison ?? 0;
+        $frais_carnet = $request->frais_carnet ?? 0;
+        $frais_emballage = $request->frais_emballage ?? 0;
+        $frais_etiquette = $request->frais_etiquette ?? 0;
+
+        $prix_final = $total - $reduction + $frais_livraison + $frais_carnet + $frais_emballage + $frais_etiquette;
+
+        return response()->json([
+            'total' => $total,
+            'prix_final' => $prix_final,
+            'details' => [
+                'total_articles' => $total,
+                'reduction' => $reduction,
+                'frais_livraison' => $frais_livraison,
+                'frais_carnet' => $frais_carnet,
+                'frais_emballage' => $frais_emballage,
+                'frais_etiquette' => $frais_etiquette,
+            ]
+        ]);
     }
 }
