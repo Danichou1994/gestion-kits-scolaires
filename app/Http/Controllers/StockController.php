@@ -43,7 +43,7 @@ class StockController extends Controller
 
         Stock::create([
             'article_id' => $request->article_id,
-            'type' => $request->type_mouvement,
+            'type_mouvement' => $request->type_mouvement,
             'quantite' => $request->quantite,
             'prix_unitaire' => $article->prix_achat,
             'motif' => $request->motif,
@@ -77,7 +77,7 @@ class StockController extends Controller
             fputcsv($file, [
                 $stock->id,
                 $stock->article->nom_article,
-                $stock->type,
+                $stock->type_mouvement,
                 $stock->quantite,
                 $stock->prix_unitaire,
                 $stock->stock_avant,

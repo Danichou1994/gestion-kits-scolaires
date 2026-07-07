@@ -46,7 +46,6 @@ class ArticleController extends Controller
             'emplacement' => 'nullable|string|max:100',
         ]);
 
-        // Créer l'article sans les colonnes qui n'existent pas
         $article = Article::create([
             'nom_article' => $request->nom_article,
             'code_barre' => $request->code_barre,
@@ -65,7 +64,7 @@ class ArticleController extends Controller
         if ($request->stock > 0) {
             Stock::create([
                 'article_id' => $article->id,
-                'type' => 'entree',
+                'type_mouvement' => 'entree',
                 'quantite' => $request->stock,
                 'prix_unitaire' => $request->prix_achat,
                 'motif' => 'Création article',
@@ -188,17 +187,14 @@ class ArticleController extends Controller
         $file = $request->file('fichier');
         $handle = fopen($file->path(), 'r');
 
-        // Lire les en-têtes
         $header = fgetcsv($handle);
         if ($header === false) {
             fclose($handle);
             return redirect()->back()->with('error', '❌ Fichier CSV vide ou corrompu.');
         }
 
-        // Nettoyer les en-têtes
         $header = array_map('trim', $header);
 
-        // VÉRIFIER SI LE FICHIER EST COMPATIBLE
         $requiredHeaders = ['Nom', 'Catégorie', "Prix d'achat", 'Prix de vente', 'Stock'];
         $missingHeaders = [];
         foreach ($requiredHeaders as $required) {
@@ -209,7 +205,7 @@ class ArticleController extends Controller
 
         if (!empty($missingHeaders)) {
             fclose($handle);
-            return redirect()->back()->with('error', '❌ FICHIER NON COMPATIBLE ! En-têtes manquants : ' . implode(', ', $missingHeaders) . '. Utilisez le modèle d\'exportation.');
+            return redirect()->back()->with('error', '❌ FICHIER NON COMPATIBLE ! En-têtes manquants : ' . implode(', ', $missingHeaders));
         }
 
         $count = 0;
@@ -221,7 +217,6 @@ class ArticleController extends Controller
             try {
                 $data = array_combine($header, $row);
 
-                // Vérifier les champs obligatoires
                 if (empty($data['Nom'])) {
                     $errors[] = "Ligne $rowNumber: Nom manquant";
                     continue;
@@ -251,12 +246,12 @@ class ArticleController extends Controller
         fclose($handle);
 
         if ($count == 0 && !empty($errors)) {
-            return redirect()->back()->with('error', '❌ Aucun article importé. Vérifiez que votre fichier est au bon format.');
+            return redirect()->back()->with('error', '❌ Aucun article importé. Vérifiez votre fichier.');
         }
 
         $message = "✅ $count articles importés avec succès !";
         if (!empty($errors)) {
-            $message .= ' ⚠️ Erreurs: ' . implode('; ', $errors);
+            $message .= ' ⚠️ ' . implode('; ', $errors);
         }
 
         return redirect()->route('articles.index')->with('success', $message);
