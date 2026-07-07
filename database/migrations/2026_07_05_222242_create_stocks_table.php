@@ -12,9 +12,9 @@ return new class extends Migration
             Schema::create('stocks', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('article_id')->constrained()->cascadeOnDelete();
-                $table->enum('type', ['entree', 'sortie']);
+                $table->enum('type_mouvement', ['entree', 'sortie']);
                 $table->integer('quantite');
-                $table->decimal('prix_unitaire', 10, 2);
+                $table->decimal('prix_unitaire', 15, 2);
                 $table->foreignId('vente_id')->nullable()->constrained()->nullOnDelete();
                 $table->string('reference')->nullable();
                 $table->text('motif')->nullable();

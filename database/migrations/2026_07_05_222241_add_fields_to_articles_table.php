@@ -13,13 +13,13 @@ return new class extends Migration
                 $table->string('code_barre')->nullable()->unique()->after('id');
             }
             if (!Schema::hasColumn('articles', 'prix_achat')) {
-                $table->decimal('prix_achat', 10, 2)->default(0)->after('prix_unitaire');
+                $table->decimal('prix_achat', 15, 2)->default(0)->after('prix_unitaire');
             }
             if (!Schema::hasColumn('articles', 'prix_vente')) {
-                $table->decimal('prix_vente', 10, 2)->default(0)->after('prix_achat');
+                $table->decimal('prix_vente', 15, 2)->default(0)->after('prix_achat');
             }
             if (!Schema::hasColumn('articles', 'benefice')) {
-                $table->decimal('benefice', 10, 2)->default(0)->after('prix_vente');
+                $table->decimal('benefice', 15, 2)->default(0)->after('prix_vente');
             }
             if (!Schema::hasColumn('articles', 'fournisseur')) {
                 $table->string('fournisseur')->nullable()->after('categorie');
@@ -30,15 +30,6 @@ return new class extends Migration
             if (!Schema::hasColumn('articles', 'emplacement')) {
                 $table->string('emplacement')->nullable()->after('unite_mesure');
             }
-            if (!Schema::hasColumn('articles', 'poids')) {
-                $table->decimal('poids', 10, 2)->nullable()->after('emplacement');
-            }
-            if (!Schema::hasColumn('articles', 'marque')) {
-                $table->string('marque')->nullable()->after('poids');
-            }
-            if (!Schema::hasColumn('articles', 'description')) {
-                $table->text('description')->nullable()->after('marque');
-            }
         });
     }
 
@@ -47,8 +38,7 @@ return new class extends Migration
         Schema::table('articles', function (Blueprint $table) {
             $table->dropColumn([
                 'code_barre', 'prix_achat', 'prix_vente', 'benefice',
-                'fournisseur', 'unite_mesure', 'emplacement',
-                'poids', 'marque', 'description'
+                'fournisseur', 'unite_mesure', 'emplacement'
             ]);
         });
     }
