@@ -20,13 +20,19 @@
 
 <!-- Formulaire d'import -->
 <div id="importForm" class="hidden bg-white rounded-lg shadow p-4 mb-6">
+    @if(session('error'))
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {{ session('error') }}
+        </div>
+    @endif
     <form action="{{ route('articles.import-csv') }}" method="POST" enctype="multipart/form-data">
         @csrf
-        <div class="flex gap-4 items-center">
+        <div class="flex flex-wrap gap-4 items-center">
             <input type="file" name="fichier" accept=".csv" required>
             <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
                 Importer
             </button>
+            <span class="text-sm text-gray-500">Format: CSV avec en-têtes: Nom, Catégorie, Prix d'achat, Prix de vente, Stock</span>
         </div>
     </form>
 </div>

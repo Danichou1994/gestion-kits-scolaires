@@ -44,11 +44,9 @@ class ArticleController extends Controller
             'unite_mesure' => 'required|string',
             'fournisseur' => 'nullable|string|max:255',
             'emplacement' => 'nullable|string|max:100',
-            'poids' => 'nullable|numeric|min:0',
-            'marque' => 'nullable|string|max:100',
-            'description' => 'nullable|string',
         ]);
 
+        // Créer l'article sans les colonnes qui n'existent pas
         $article = Article::create([
             'nom_article' => $request->nom_article,
             'code_barre' => $request->code_barre,
@@ -62,9 +60,6 @@ class ArticleController extends Controller
             'unite_mesure' => $request->unite_mesure,
             'fournisseur' => $request->fournisseur,
             'emplacement' => $request->emplacement,
-            'poids' => $request->poids,
-            'marque' => $request->marque,
-            'description' => $request->description,
         ]);
 
         if ($request->stock > 0) {
@@ -115,9 +110,6 @@ class ArticleController extends Controller
             'unite_mesure' => 'required|string',
             'fournisseur' => 'nullable|string|max:255',
             'emplacement' => 'nullable|string|max:100',
-            'poids' => 'nullable|numeric|min:0',
-            'marque' => 'nullable|string|max:100',
-            'description' => 'nullable|string',
         ]);
 
         $article->update([
@@ -133,9 +125,6 @@ class ArticleController extends Controller
             'unite_mesure' => $request->unite_mesure,
             'fournisseur' => $request->fournisseur,
             'emplacement' => $request->emplacement,
-            'poids' => $request->poids,
-            'marque' => $request->marque,
-            'description' => $request->description,
         ]);
 
         return redirect()->route('articles.index')->with('success', 'Article modifié avec succès !');
@@ -165,9 +154,8 @@ class ArticleController extends Controller
         $file = fopen($filename, 'w');
         fputcsv($file, [
             'ID', 'Code barre', 'Nom', 'Catégorie', "Prix d'achat",
-            'Prix de vente', 'Bénéfice', 'Marge (%)', 'Stock',
-            'Seuil', 'Unité', 'Fournisseur', 'Emplacement',
-            'Poids', 'Marque', 'Description'
+            'Prix de vente', 'Bénéfice', 'Stock', 'Seuil', 'Unité',
+            'Fournisseur', 'Emplacement'
         ]);
 
         foreach ($articles as $article) {
@@ -179,15 +167,11 @@ class ArticleController extends Controller
                 $article->prix_achat,
                 $article->prix_vente,
                 $article->benefice,
-                number_format($article->marge, 2),
                 $article->stock,
                 $article->seuil_alerte,
                 $article->unite_mesure,
                 $article->fournisseur ?? '-',
-                $article->emplacement ?? '-',
-                $article->poids ?? '-',
-                $article->marque ?? '-',
-                $article->description ?? '-'
+                $article->emplacement ?? '-'
             ]);
         }
         fclose($file);
@@ -203,22 +187,43 @@ class ArticleController extends Controller
 
         $file = $request->file('fichier');
         $handle = fopen($file->path(), 'r');
+
+        // Lire les en-têtes
         $header = fgetcsv($handle);
+        if ($header === false) {
+            fclose($handle);
+            return redirect()->back()->with('error', '❌ Fichier CSV vide ou corrompu.');
+        }
 
         // Nettoyer les en-têtes
-        $header = array_map(function($h) {
-            return trim($h);
-        }, $header);
+        $header = array_map('trim', $header);
+
+        // VÉRIFIER SI LE FICHIER EST COMPATIBLE
+        $requiredHeaders = ['Nom', 'Catégorie', "Prix d'achat", 'Prix de vente', 'Stock'];
+        $missingHeaders = [];
+        foreach ($requiredHeaders as $required) {
+            if (!in_array($required, $header)) {
+                $missingHeaders[] = $required;
+            }
+        }
+
+        if (!empty($missingHeaders)) {
+            fclose($handle);
+            return redirect()->back()->with('error', '❌ FICHIER NON COMPATIBLE ! En-têtes manquants : ' . implode(', ', $missingHeaders) . '. Utilisez le modèle d\'exportation.');
+        }
 
         $count = 0;
         $errors = [];
+        $rowNumber = 1;
 
         while (($row = fgetcsv($handle)) !== false) {
+            $rowNumber++;
             try {
                 $data = array_combine($header, $row);
 
+                // Vérifier les champs obligatoires
                 if (empty($data['Nom'])) {
-                    $errors[] = "Ligne " . ($count + 2) . ": Nom manquant";
+                    $errors[] = "Ligne $rowNumber: Nom manquant";
                     continue;
                 }
 
@@ -236,21 +241,22 @@ class ArticleController extends Controller
                         'unite_mesure' => $data['Unité'] ?? 'pièce',
                         'fournisseur' => $data['Fournisseur'] ?? null,
                         'emplacement' => $data['Emplacement'] ?? null,
-                        'poids' => !empty($data['Poids']) ? floatval($data['Poids']) : null,
-                        'marque' => $data['Marque'] ?? null,
-                        'description' => $data['Description'] ?? null,
                     ]
                 );
                 $count++;
             } catch (\Exception $e) {
-                $errors[] = "Ligne " . ($count + 2) . ": " . $e->getMessage();
+                $errors[] = "Ligne $rowNumber: " . $e->getMessage();
             }
         }
         fclose($handle);
 
-        $message = $count . ' articles importés avec succès !';
+        if ($count == 0 && !empty($errors)) {
+            return redirect()->back()->with('error', '❌ Aucun article importé. Vérifiez que votre fichier est au bon format.');
+        }
+
+        $message = "✅ $count articles importés avec succès !";
         if (!empty($errors)) {
-            $message .= ' Erreurs: ' . implode('; ', $errors);
+            $message .= ' ⚠️ Erreurs: ' . implode('; ', $errors);
         }
 
         return redirect()->route('articles.index')->with('success', $message);
