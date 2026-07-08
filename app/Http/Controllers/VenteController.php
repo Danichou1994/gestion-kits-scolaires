@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Vente;
+use App\Models\VenteDetail;
 use App\Models\Client;
 use App\Models\Kit;
 use App\Models\Article;
@@ -16,12 +17,12 @@ class VenteController extends Controller
 {
     public function index()
     {
-        $ventes = Vente::with(['client', 'kit', 'article'])->orderBy('created_at', 'desc')->get();
+        $ventes = Vente::with(['client', 'details'])->orderBy('created_at', 'desc')->get();
         $totalVentes = Vente::count();
         $totalChiffre = Vente::sum('montant_total');
         $totalSolde = Vente::sum('solde');
         $ventesEnCours = Vente::where('statut', 'en_cours')->count();
-        
+
         return view('ventes.index', compact('ventes', 'totalVentes', 'totalChiffre', 'totalSolde', 'ventesEnCours'));
     }
 
@@ -37,28 +38,58 @@ class VenteController extends Controller
     {
         $request->validate([
             'client_id' => 'required|exists:clients,id',
-            'type_vente' => 'required|in:article,kit',
+            'items' => 'required|array|min:1',
+            'items.*.type' => 'required|in:article,kit',
+            'items.*.id' => 'required',
+            'items.*.quantite' => 'required|integer|min:1',
         ]);
 
-        if ($request->type_vente === 'kit') {
-            $request->validate(['kit_id' => 'required|exists:kits,id']);
-            $kit = Kit::find($request->kit_id);
-            $montant_total = $kit->prix_final;
-            $type_label = 'kit';
-            $item_id = $request->kit_id;
-        } else {
-            $request->validate([
-                'article_id' => 'required|exists:articles,id',
-                'quantite' => 'required|integer|min:1',
-            ]);
-            $article = Article::find($request->article_id);
-            if ($article->stock < $request->quantite) {
-                return redirect()->back()->with('error', 'Stock insuffisant ! (Stock: ' . $article->stock . ')');
+        $montant_ht = 0;
+        $details = [];
+
+        foreach ($request->items as $item) {
+            if ($item['type'] === 'article') {
+                $article = Article::find($item['id']);
+                if (!$article || $article->stock < $item['quantite']) {
+                    return redirect()->back()->with('error', 'Stock insuffisant pour ' . ($article->nom_article ?? 'article'));
+                }
+                $prix = $article->prix_vente;
+                $total_ligne = $prix * $item['quantite'];
+                $details[] = [
+                    'type' => 'article',
+                    'article_id' => $item['id'],
+                    'quantite' => $item['quantite'],
+                    'prix_unitaire' => $prix,
+                    'montant_ht' => $total_ligne,
+                    'total_ligne' => $total_ligne,
+                ];
+                $montant_ht += $total_ligne;
+            } else {
+                $kit = Kit::find($item['id']);
+                if (!$kit) {
+                    return redirect()->back()->with('error', 'Kit introuvable');
+                }
+                $prix = $kit->prix_final;
+                $total_ligne = $prix * $item['quantite'];
+                $details[] = [
+                    'type' => 'kit',
+                    'kit_id' => $item['id'],
+                    'quantite' => $item['quantite'],
+                    'prix_unitaire' => $prix,
+                    'montant_ht' => $total_ligne,
+                    'total_ligne' => $total_ligne,
+                ];
+                $montant_ht += $total_ligne;
             }
-            $montant_total = $article->prix_vente * $request->quantite;
-            $type_label = 'article';
-            $item_id = $request->article_id;
         }
+
+        // Calculs
+        $tva = $montant_ht * 0.18;
+        $remise = $request->remise ?? 0;
+        $frais_livraison = $request->frais_livraison ?? 0;
+        $frais_carnet = $request->frais_carnet ?? 0;
+        $montant_total = $montant_ht + $tva - $remise + $frais_livraison + $frais_carnet;
+        $net_a_payer = $montant_total;
 
         $numero = Vente::genererNumero();
         $acompte = $montant_total / 4;
@@ -69,14 +100,14 @@ class VenteController extends Controller
         $vente = Vente::create([
             'numero_vente' => $numero,
             'client_id' => $request->client_id,
-            'type_vente' => $type_label,
-            'kit_id' => $request->kit_id ?? null,
-            'article_id' => $request->article_id ?? null,
-            'quantite' => $request->quantite ?? 1,
+            'type_vente' => 'mixte',
+            'montant_ht' => $montant_ht,
+            'tva' => $tva,
+            'remise' => $remise,
+            'frais_livraison' => $frais_livraison,
+            'frais_carnet' => $frais_carnet,
             'montant_total' => $montant_total,
-            'remise' => $request->remise ?? 0,
-            'frais_livraison' => $request->frais_livraison ?? 0,
-            'frais_carnet' => $request->frais_carnet ?? 0,
+            'net_a_payer' => $net_a_payer,
             'acompte' => $acompte,
             'solde' => $solde,
             'nb_mensualites' => $nb_mensualites,
@@ -87,25 +118,33 @@ class VenteController extends Controller
             'notes' => $request->notes,
         ]);
 
-        // Stock sortie si vente article
-        if ($request->type_vente === 'article') {
-            $article = Article::find($request->article_id);
-            $stockAvant = $article->stock;
-            $article->stock -= $request->quantite;
-            $article->save();
+        // Enregistrer les détails
+        foreach ($details as $detail) {
+            $detail['vente_id'] = $vente->id;
+            VenteDetail::create($detail);
+        }
 
-            Stock::create([
-                'article_id' => $request->article_id,
-                'type_mouvement' => 'sortie',
-                'quantite' => $request->quantite,
-                'prix_unitaire' => $article->prix_achat,
-                'vente_id' => $vente->id,
-                'reference' => $numero,
-                'motif' => 'Vente',
-                'stock_avant' => $stockAvant,
-                'stock_apres' => $article->stock,
-                'date_mouvement' => now(),
-            ]);
+        // Gérer le stock
+        foreach ($request->items as $item) {
+            if ($item['type'] === 'article') {
+                $article = Article::find($item['id']);
+                $stockAvant = $article->stock;
+                $article->stock -= $item['quantite'];
+                $article->save();
+
+                Stock::create([
+                    'article_id' => $item['id'],
+                    'type_mouvement' => 'sortie',
+                    'quantite' => $item['quantite'],
+                    'prix_unitaire' => $article->prix_achat,
+                    'vente_id' => $vente->id,
+                    'reference' => $numero,
+                    'motif' => 'Vente',
+                    'stock_avant' => $stockAvant,
+                    'stock_apres' => $article->stock,
+                    'date_mouvement' => now(),
+                ]);
+            }
         }
 
         // Générer les échéances
@@ -126,7 +165,7 @@ class VenteController extends Controller
 
     public function show(Vente $vente)
     {
-        $vente->load(['client', 'kit', 'kit.articles', 'article', 'echeances']);
+        $vente->load(['client', 'details', 'details.article', 'details.kit', 'echeances']);
         return view('ventes.show', compact('vente'));
     }
 
@@ -154,26 +193,23 @@ class VenteController extends Controller
         return redirect()->route('ventes.index')->with('success', 'Vente supprimée !');
     }
 
-    // ====== FACTURE PDF ======
     public function facture(Vente $vente)
     {
-        $vente->load(['client', 'kit.articles', 'article', 'echeances']);
+        $vente->load(['client', 'details', 'details.article', 'details.kit', 'echeances']);
         $pdf = Pdf::loadView('pdf.facture', compact('vente'));
         $pdf->setPaper('a4', 'portrait');
         return $pdf->download('facture-' . $vente->numero_vente . '.pdf');
     }
 
-    // ====== FACTURE AVEC APERÇU ======
     public function facturePreview(Vente $vente)
     {
-        $vente->load(['client', 'kit.articles', 'article', 'echeances']);
+        $vente->load(['client', 'details', 'details.article', 'details.kit', 'echeances']);
         return view('pdf.facture-preview', compact('vente'));
     }
 
-    // ====== EXPORT CSV ======
     public function exportCSV()
     {
-        $ventes = Vente::with(['client', 'kit', 'article'])->get();
+        $ventes = Vente::with(['client', 'details'])->get();
         $filename = storage_path('app/temp/ventes.csv');
 
         if (!is_dir(dirname($filename))) {
@@ -181,17 +217,13 @@ class VenteController extends Controller
         }
 
         $file = fopen($filename, 'w');
-        fputcsv($file, ['N° Vente', 'Date', 'Client', 'Type', 'Article/Kit', 'Qté', 'Total', 'Acompte', 'Solde', 'Mensualités', 'Statut']);
+        fputcsv($file, ['N° Vente', 'Date', 'Client', 'Total', 'Acompte', 'Solde', 'Mensualités', 'Statut']);
 
         foreach ($ventes as $vente) {
-            $item = $vente->type_vente == 'kit' ? $vente->kit->nom_kit ?? 'N/A' : $vente->article->nom_article ?? 'N/A';
             fputcsv($file, [
                 $vente->numero_vente,
                 $vente->date_vente->format('d/m/Y'),
                 $vente->client->nom . ' ' . $vente->client->prenom,
-                $vente->type_vente == 'kit' ? 'Kit' : 'Article',
-                $item,
-                $vente->quantite ?? 1,
                 $vente->montant_total,
                 $vente->acompte,
                 $vente->solde,

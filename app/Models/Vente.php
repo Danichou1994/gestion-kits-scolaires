@@ -9,11 +9,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Vente extends Model
 {
     protected $fillable = [
-        'numero_vente', 'client_id', 'type_vente', 'kit_id', 'article_id',
-        'quantite', 'montant_total', 'remise', 'frais_livraison',
-        'frais_carnet', 'acompte', 'solde', 'nb_mensualites',
-        'montant_mensualite', 'statut', 'mode_paiement', 'date_vente',
-        'reference_paiement', 'notes'
+        'numero_vente', 'client_id', 'type_vente',
+        'montant_ht', 'tva', 'remise', 'frais_livraison',
+        'frais_carnet', 'montant_total', 'net_a_payer',
+        'acompte', 'solde', 'nb_mensualites',
+        'montant_mensualite', 'statut', 'mode_paiement',
+        'date_vente', 'reference_paiement', 'notes'
     ];
 
     protected $casts = [
@@ -25,14 +26,9 @@ class Vente extends Model
         return $this->belongsTo(Client::class);
     }
 
-    public function kit(): BelongsTo
+    public function details(): HasMany
     {
-        return $this->belongsTo(Kit::class);
-    }
-
-    public function article(): BelongsTo
-    {
-        return $this->belongsTo(Article::class);
+        return $this->hasMany(VenteDetail::class);
     }
 
     public function echeances(): HasMany
@@ -47,23 +43,13 @@ class Vente extends Model
         return 'FV-' . date('Ymd') . '-' . str_pad($num, 5, '0', STR_PAD_LEFT);
     }
 
-    public function getMontantTotalFormateAttribute(): string
+    public function getEtablissementAttribute(): string
     {
-        return number_format($this->montant_total, 0, ',', ' ') . ' F';
+        return 'La Lumiere_Divine';
     }
 
-    public function getStatutBadgeAttribute(): string
+    public function getTelephoneEtablissementAttribute(): string
     {
-        $badges = [
-            'en_cours' => '<span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-sm">⏳ En cours</span>',
-            'termine' => '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">✅ Terminé</span>',
-            'annule' => '<span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm">❌ Annulé</span>'
-        ];
-        return $badges[$this->statut] ?? $badges['en_cours'];
-    }
-
-    public function getTypeVenteLabelAttribute(): string
-    {
-        return $this->type_vente == 'kit' ? '🎒 Kit' : '📦 Article';
+        return '92108545';
     }
 }
