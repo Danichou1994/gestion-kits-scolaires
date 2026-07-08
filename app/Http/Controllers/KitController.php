@@ -21,36 +21,48 @@ class KitController extends Controller
     }
 
     public function store(Request $request)
-{
-    $request->validate([
-        'nom_kit' => 'required|unique:kits',
-        'articles' => 'required|array|min:1',
-        'articles.*.id' => 'required|exists:articles,id',
-        'articles.*.quantite' => 'required|integer|min:1',
-    ]);
+    {
+        $request->validate([
+            'nom_kit' => 'required|unique:kits',
+            'description' => 'nullable|string',
+            'articles' => 'required|array|min:1',
+            'articles.*.id' => 'required|exists:articles,id',
+            'articles.*.quantite' => 'required|integer|min:1',
+            'reduction' => 'nullable|numeric|min:0',
+            'frais_livraison' => 'nullable|numeric|min:0',
+            'frais_carnet' => 'nullable|numeric|min:0',
+            'frais_emballage' => 'nullable|numeric|min:0',
+            'frais_etiquette' => 'nullable|numeric|min:0',
+        ]);
 
-    // Créer le kit avec les colonnes de base uniquement
-    $kit = Kit::create([
-        'nom_kit' => $request->nom_kit,
-        'description' => $request->description,
-        // Les autres colonnes seront ajoutées après la migration
-    ]);
+        // Créer le kit avec toutes les colonnes
+        $kit = Kit::create([
+            'nom_kit' => $request->nom_kit,
+            'description' => $request->description,
+            'prix_total' => 0, // Sera recalculé après
+            'reduction' => $request->reduction ?? 0,
+            'frais_livraison' => $request->frais_livraison ?? 0,
+            'frais_carnet' => $request->frais_carnet ?? 0,
+            'frais_emballage' => $request->frais_emballage ?? 0,
+            'frais_etiquette' => $request->frais_etiquette ?? 0,
+            'prix_final' => 0, // Sera recalculé après
+            'en_promotion' => $request->has('en_promotion'),
+            'date_debut_promo' => $request->date_debut_promo,
+            'date_fin_promo' => $request->date_fin_promo,
+            'kit_notes' => $request->kit_notes,
+        ]);
 
-    // Associer les articles
-    foreach ($request->articles as $article) {
-        $kit->articles()->attach($article['id'], ['quantite' => $article['quantite']]);
+        // Associer les articles
+        foreach ($request->articles as $article) {
+            $kit->articles()->attach($article['id'], ['quantite' => $article['quantite']]);
+        }
+
+        // Calculer le prix final
+        $kit->calculerPrixFinal();
+
+        return redirect()->route('kits.index')->with('success', 'Kit créé avec succès !');
     }
 
-    // Calculer le prix total
-    $total = 0;
-    foreach ($kit->articles as $article) {
-        $total += $article->prix_vente * $article->pivot->quantite;
-    }
-    $kit->prix_total = $total;
-    $kit->save();
-
-    return redirect()->route('kits.index')->with('success', 'Kit créé avec succès !');
-}
     public function show(Kit $kit)
     {
         $kit->load('articles');
