@@ -36,7 +36,7 @@ return new class extends Migration
             if (!Schema::hasColumn('kits', 'frais_etiquette')) {
                 $table->decimal('frais_etiquette', 10, 2)->default(0)->after('frais_emballage');
             }
-            if (!Schema::hasColumn('kits', 'frais_etiquette')) {
+            if (!Schema::hasColumn('kits', 'kit_notes')) {
                 $table->text('kit_notes')->nullable()->after('frais_etiquette');
             }
         });
