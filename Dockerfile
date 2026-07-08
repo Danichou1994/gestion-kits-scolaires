@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
 
 # Installer Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-RUN php artisan migrate --force
+
 # Activer Apache mod_rewrite
 RUN a2enmod rewrite
 
@@ -28,12 +28,12 @@ RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 COPY . /var/www/html
 
 # Copier le fichier .env.production en .env
-RUN cp /var/www/html/.env.production /var/www/html/.env
+RUN if [ -f /var/www/html/.env.production ]; then cp /var/www/html/.env.production /var/www/html/.env; fi
 
 # Installer les dépendances
 RUN composer install --no-dev --prefer-dist --ignore-platform-req=php
 
-# Exécuter les migrations
+# Exécuter les migrations (APRÈS la copie des fichiers)
 RUN php artisan migrate --force
 
 # Configurer les permissions
