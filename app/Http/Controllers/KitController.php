@@ -28,11 +28,6 @@ class KitController extends Controller
             'articles' => 'required|array|min:1',
             'articles.*.id' => 'required|exists:articles,id',
             'articles.*.quantite' => 'required|integer|min:1',
-            'reduction' => 'nullable|numeric|min:0',
-            'frais_livraison' => 'nullable|numeric|min:0',
-            'frais_carnet' => 'nullable|numeric|min:0',
-            'frais_emballage' => 'nullable|numeric|min:0',
-            'frais_etiquette' => 'nullable|numeric|min:0',
         ]);
 
         $kit = Kit::create([
@@ -147,41 +142,5 @@ class KitController extends Controller
         fclose($file);
 
         return response()->download($filename, 'kits-' . date('Y-m-d') . '.csv')->deleteFileAfterSend(true);
-    }
-
-    public function calculerPrix(Request $request)
-    {
-        $total = 0;
-        $articles = $request->articles ?? [];
-
-        foreach ($articles as $item) {
-            if (isset($item['id']) && isset($item['quantite'])) {
-                $article = Article::find($item['id']);
-                if ($article) {
-                    $total += $article->prix_vente * $item['quantite'];
-                }
-            }
-        }
-
-        $reduction = $request->reduction ?? 0;
-        $frais_livraison = $request->frais_livraison ?? 0;
-        $frais_carnet = $request->frais_carnet ?? 0;
-        $frais_emballage = $request->frais_emballage ?? 0;
-        $frais_etiquette = $request->frais_etiquette ?? 0;
-
-        $prix_final = $total - $reduction + $frais_livraison + $frais_carnet + $frais_emballage + $frais_etiquette;
-
-        return response()->json([
-            'total' => $total,
-            'prix_final' => $prix_final,
-            'details' => [
-                'total_articles' => $total,
-                'reduction' => $reduction,
-                'frais_livraison' => $frais_livraison,
-                'frais_carnet' => $frais_carnet,
-                'frais_emballage' => $frais_emballage,
-                'frais_etiquette' => $frais_etiquette,
-            ]
-        ]);
     }
 }

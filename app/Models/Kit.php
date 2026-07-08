@@ -32,7 +32,6 @@ class Kit extends Model
         return $this->hasMany(Vente::class);
     }
 
-    // Calcul automatique du prix total et final
     public function calculerPrixFinal(): void
     {
         $total = 0;
@@ -42,17 +41,12 @@ class Kit extends Model
 
         $this->prix_total = $total;
 
-        // Vérifier si en promotion
         $estEnPromo = $this->en_promotion && 
                       $this->date_debut_promo && 
                       $this->date_fin_promo && 
                       Carbon::now()->between($this->date_debut_promo, $this->date_fin_promo);
 
-        if ($estEnPromo) {
-            $prixApresReduction = $total - $this->reduction;
-        } else {
-            $prixApresReduction = $total - $this->reduction;
-        }
+        $prixApresReduction = $total - $this->reduction;
 
         $this->prix_final = $prixApresReduction + $this->frais_livraison + 
                            $this->frais_carnet + $this->frais_emballage + 

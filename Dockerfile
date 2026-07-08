@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
 
 # Installer Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
+RUN php artisan migrate --force
 # Activer Apache mod_rewrite
 RUN a2enmod rewrite
 
