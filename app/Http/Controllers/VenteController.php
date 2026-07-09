@@ -39,7 +39,6 @@ class VenteController extends Controller
             'client_id' => 'required|exists:clients,id',
         ]);
 
-        // Récupérer les items
         $items = json_decode($request->items, true);
         if (empty($items)) {
             return redirect()->back()->with('error', 'Veuillez ajouter au moins un article ou un kit.');
@@ -47,7 +46,6 @@ class VenteController extends Controller
 
         $sous_total = 0;
         $items_data = [];
-        $quantite_totale = 0;
 
         foreach ($items as $item) {
             if ($item['type'] == 'kit') {
@@ -56,7 +54,6 @@ class VenteController extends Controller
                     $prix = $kit->prix_final;
                     $total = $prix * $item['quantite'];
                     $sous_total += $total;
-                    $quantite_totale += $item['quantite'];
                     $items_data[] = [
                         'type' => 'kit',
                         'id' => $kit->id,
@@ -75,7 +72,6 @@ class VenteController extends Controller
                     $prix = $article->prix_vente;
                     $total = $prix * $item['quantite'];
                     $sous_total += $total;
-                    $quantite_totale += $item['quantite'];
                     $items_data[] = [
                         'type' => 'article',
                         'id' => $article->id,
@@ -88,15 +84,12 @@ class VenteController extends Controller
             }
         }
 
-        // Calculs
-        $tva = $sous_total * 0.18; // TVA 18%
-        $total_ttc = $sous_total + $tva;
-        $montant_total = $total_ttc;
+        // Calculs sans TVA
         $remise = $request->remise ?? 0;
         $frais_livraison = $request->frais_livraison ?? 0;
         $frais_carnet = $request->frais_carnet ?? 0;
 
-        $montant_final = $montant_total - $remise + $frais_livraison + $frais_carnet;
+        $montant_final = $sous_total - $remise + $frais_livraison + $frais_carnet;
 
         $numero = Vente::genererNumero();
         $acompte = $montant_final / 4;
@@ -104,15 +97,14 @@ class VenteController extends Controller
         $nb_mensualites = $request->nb_mensualites ?? 3;
         $montant_mensualite = $solde / $nb_mensualites;
 
-        // Créer la vente
         $vente = Vente::create([
             'numero_vente' => $numero,
             'client_id' => $request->client_id,
             'type_vente' => 'mixte',
             'items' => json_encode($items_data),
             'sous_total' => $sous_total,
-            'total_tva' => $tva,
-            'total_ttc' => $total_ttc,
+            'total_tva' => 0,
+            'total_ttc' => $sous_total,
             'montant_total' => $montant_final,
             'remise' => $remise,
             'frais_livraison' => $frais_livraison,
@@ -220,7 +212,7 @@ class VenteController extends Controller
         }
 
         $file = fopen($filename, 'w');
-        fputcsv($file, ['N° Vente', 'Date', 'Client', 'Type', 'Article/Kit', 'Qté', 'Total', 'Acompte', 'Solde', 'Mensualités', 'Statut']);
+        fputcsv($file, ['N° Vente', 'Date', 'Client', 'Type', 'Produit', 'Qté', 'Total', 'Acompte', 'Solde', 'Mensualités', 'Statut']);
 
         foreach ($ventes as $vente) {
             $item = $vente->type_vente == 'kit' ? $vente->kit->nom_kit ?? 'N/A' : $vente->article->nom_article ?? 'N/A';

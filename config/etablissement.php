@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'nom' => env('ETABLISSEMENT_NOM', 'Mon Établissement'),
-    'telephone' => env('ETABLISSEMENT_TELEPHONE', ''),
-    'adresse' => env('ETABLISSEMENT_ADRESSE', ''),
+    'nom' => env('ETABLISSEMENT_NOM', 'La Grace Lumineuse'),
+    'telephone' => env('ETABLISSEMENT_TELEPHONE', '92108545'),
+    'adresse' => env('ETABLISSEMENT_ADRESSE', 'Lomé - Togo'),
 ];

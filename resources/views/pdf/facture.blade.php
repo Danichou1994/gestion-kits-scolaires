@@ -104,12 +104,6 @@
         .statut-paye { color: #16a34a; font-weight: bold; }
         .statut-attente { color: #d97706; font-weight: bold; }
         .statut-retard { color: #dc2626; font-weight: bold; }
-        .etablissement-info {
-            font-size: 11px;
-            color: #64748b;
-            text-align: center;
-            margin-bottom: 10px;
-        }
         .badge-promo {
             background: #dc2626;
             color: white;
@@ -198,13 +192,18 @@
             </tbody>
         </table>
 
-        <!-- Récapitulatif -->
+        <!-- Récapitulatif (sans TVA) -->
         <div class="recap">
             <div class="recap-item"><span>💰 Sous-total</span><span>{{ number_format($totalItems, 0, ',', ' ') }} F</span></div>
-            <div class="recap-item"><span>📊 TVA (18%)</span><span>{{ number_format($totalItems * 0.18, 0, ',', ' ') }} F</span></div>
+            @if(($vente->remise ?? 0) > 0)
             <div class="recap-item"><span>💳 Remise</span><span>-{{ number_format($vente->remise ?? 0, 0, ',', ' ') }} F</span></div>
+            @endif
+            @if(($vente->frais_livraison ?? 0) > 0)
             <div class="recap-item"><span>🚚 Frais livraison</span><span>{{ number_format($vente->frais_livraison ?? 0, 0, ',', ' ') }} F</span></div>
+            @endif
+            @if(($vente->frais_carnet ?? 0) > 0)
             <div class="recap-item"><span>📋 Frais carnet</span><span>{{ number_format($vente->frais_carnet ?? 0, 0, ',', ' ') }} F</span></div>
+            @endif
             <div class="recap-item total">
                 <span>💰 TOTAL</span>
                 <span>{{ number_format($vente->montant_total, 0, ',', ' ') }} F</span>
