@@ -14,7 +14,7 @@ class Vente extends Model
         'frais_carnet', 'acompte', 'solde', 'nb_mensualites',
         'montant_mensualite', 'statut', 'mode_paiement', 'date_vente',
         'reference_paiement', 'notes', 'items', 'sous_total',
-        'total_tva', 'total_ttc'
+        'total_ht'
     ];
 
     protected $casts = [
