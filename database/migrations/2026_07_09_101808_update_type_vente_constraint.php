@@ -8,12 +8,27 @@ return new class extends Migration
 {
     public function up()
     {
-        // Modifier directement la colonne pour accepter 'mixte'
-        DB::statement("ALTER TABLE ventes MODIFY type_vente ENUM('article', 'kit', 'mixte') NOT NULL DEFAULT 'kit'");
+        $driver = DB::getDriverName();
+        
+        if ($driver === 'pgsql') {
+            // PostgreSQL
+            DB::statement("ALTER TABLE ventes ALTER COLUMN type_vente TYPE text");
+            DB::statement("ALTER TABLE ventes ALTER COLUMN type_vente SET DEFAULT 'kit'");
+        } else {
+            // MySQL
+            DB::statement("ALTER TABLE ventes MODIFY type_vente ENUM('article', 'kit', 'mixte') NOT NULL DEFAULT 'kit'");
+        }
     }
 
     public function down()
     {
-        DB::statement("ALTER TABLE ventes MODIFY type_vente ENUM('article', 'kit') NOT NULL DEFAULT 'kit'");
+        $driver = DB::getDriverName();
+        
+        if ($driver === 'pgsql') {
+            DB::statement("ALTER TABLE ventes ALTER COLUMN type_vente TYPE text");
+            DB::statement("ALTER TABLE ventes ALTER COLUMN type_vente SET DEFAULT 'kit'");
+        } else {
+            DB::statement("ALTER TABLE ventes MODIFY type_vente ENUM('article', 'kit') NOT NULL DEFAULT 'kit'");
+        }
     }
 };
