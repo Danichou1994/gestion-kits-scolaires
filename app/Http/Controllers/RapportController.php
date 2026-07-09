@@ -8,6 +8,7 @@ use App\Models\Echeance;
 use App\Models\Kit;
 use App\Models\Article;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Spatie\SimpleExcel\SimpleExcelWriter;
 
 class RapportController extends Controller
 {
@@ -30,14 +31,13 @@ class RapportController extends Controller
 
         return $pdf->download('rapport-complet-' . date('Y-m-d') . '.pdf');
     }
-}
 
     public function exportExcel()
     {
         $path = storage_path('app/temp/rapport-complet.xlsx');
         
-        if (!is_dir(storage_path('app/temp'))) {
-            mkdir(storage_path('app/temp'), 0777, true);
+        if (!is_dir(dirname($path))) {
+            mkdir(dirname($path), 0777, true);
         }
 
         $writer = SimpleExcelWriter::create($path);
