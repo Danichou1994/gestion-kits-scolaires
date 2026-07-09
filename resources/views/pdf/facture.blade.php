@@ -5,10 +5,10 @@
     <title>Facture #{{ $vente->numero_vente }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'DejaVu Sans', Arial, sans-serif;
+        body { 
+            font-family: 'DejaVu Sans', Arial, sans-serif; 
             padding: 20px;
-            background: #f8fafc;
+            font-size: 12px;
         }
         .invoice-box {
             max-width: 800px;
@@ -16,59 +16,43 @@
             padding: 30px;
             border: 1px solid #e2e8f0;
             background: white;
-            border-radius: 10px;
         }
         .header {
+            display: flex;
+            justify-content: space-between;
             border-bottom: 3px solid #2563EB;
             padding-bottom: 20px;
             margin-bottom: 20px;
         }
-        .header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .logo h1 {
+        .header-left h1 {
             color: #2563EB;
             font-size: 24px;
         }
-        .logo .etablissement {
+        .header-left p {
+            color: #64748b;
+            font-size: 12px;
+            margin: 2px 0;
+        }
+        .header-right {
+            text-align: right;
+        }
+        .header-right h2 {
             color: #1e293b;
-            font-weight: bold;
-            font-size: 18px;
+            font-size: 22px;
         }
-        .logo .tel {
-            color: #64748b;
-            font-size: 14px;
-        }
-        .facture-title h2 {
-            color: #2563EB;
-            font-size: 28px;
-        }
-        .facture-title p {
-            color: #64748b;
-            font-size: 14px;
-        }
-        .facture-title .num {
+        .header-right .facture-num {
             color: #2563EB;
             font-weight: bold;
-            font-size: 16px;
+            font-size: 14px;
         }
-        .client-info {
+        .info-client {
             background: #f1f5f9;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
         }
-        .client-info h3 {
-            color: #1e293b;
-            margin-bottom: 5px;
-        }
-        .client-info p {
-            color: #475569;
-            font-size: 14px;
-            margin: 3px 0;
-        }
+        .info-client h3 { color: #1e293b; margin-bottom: 5px; }
+        .info-client p { color: #475569; font-size: 12px; margin: 2px 0; }
         table {
             width: 100%;
             border-collapse: collapse;
@@ -77,38 +61,37 @@
         th {
             background: #2563EB;
             color: white;
-            padding: 10px;
+            padding: 8px;
             text-align: left;
-            font-size: 13px;
+            font-size: 12px;
         }
         td {
-            padding: 10px;
+            padding: 8px;
             border-bottom: 1px solid #e2e8f0;
-            font-size: 13px;
+            font-size: 12px;
         }
-        .text-right { text-align: right; }
-        .text-center { text-align: center; }
-        .font-bold { font-weight: bold; }
+        .total-row {
+            background: #f1f5f9;
+            font-weight: bold;
+        }
+        .montant { text-align: right; }
         .recap {
             margin-top: 20px;
             padding: 15px;
             background: #f1f5f9;
             border-radius: 8px;
-            max-width: 400px;
-            margin-left: auto;
         }
         .recap-item {
             display: flex;
             justify-content: space-between;
-            padding: 5px 0;
+            padding: 4px 0;
         }
         .recap-item.total {
             border-top: 2px solid #2563EB;
             padding-top: 10px;
             margin-top: 5px;
             font-weight: bold;
-            font-size: 18px;
-            color: #2563EB;
+            font-size: 16px;
         }
         .footer {
             text-align: center;
@@ -116,163 +99,161 @@
             padding-top: 20px;
             border-top: 1px solid #e2e8f0;
             color: #94a3b8;
-            font-size: 12px;
+            font-size: 11px;
         }
         .statut-paye { color: #16a34a; font-weight: bold; }
         .statut-attente { color: #d97706; font-weight: bold; }
         .statut-retard { color: #dc2626; font-weight: bold; }
-        .badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 12px;
+        .etablissement-info {
+            font-size: 11px;
+            color: #64748b;
+            text-align: center;
+            margin-bottom: 10px;
         }
-        .badge-en-cours { background: #fef3c7; color: #92400e; }
-        .badge-termine { background: #d1fae5; color: #065f46; }
-        .badge-annule { background: #fee2e2; color: #991b1b; }
-        .mt-2 { margin-top: 10px; }
-        .mb-2 { margin-bottom: 10px; }
-        .text-gray { color: #64748b; }
+        .badge-promo {
+            background: #dc2626;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
     <div class="invoice-box">
-        <!-- En-tête -->
+        <!-- En-tête avec établissement -->
         <div class="header">
-            <div class="header-top">
-                <div class="logo">
-                    <h1>📚 La Lumiere_Divine</h1>
-                    <div class="etablissement">🏫 École La Lumiere_Divine</div>
-                    <div class="tel">📞 +228 92 10 85 45</div>
-                    <div class="tel">📍 Lomé - Togo</div>
-                </div>
-                <div class="facture-title">
-                    <h2>FACTURE</h2>
-                    <p class="num">N° {{ $vente->numero_vente }}</p>
-                    <p>Date: {{ $vente->date_vente->format('d/m/Y') }}</p>
-                </div>
+            <div class="header-left">
+                <h1>📚 {{ config('etablissement.nom') }}</h1>
+                <p>{{ config('etablissement.adresse') }}</p>
+                <p>📞 {{ config('etablissement.telephone') }}</p>
+                <p>✉️ {{ config('etablissement.email') }}</p>
+            </div>
+            <div class="header-right">
+                <h2>FACTURE</h2>
+                <p class="facture-num">N° {{ $vente->numero_vente }}</p>
+                <p>Date: {{ $vente->date_vente->format('d/m/Y') }}</p>
             </div>
         </div>
 
         <!-- Client -->
-        <div class="client-info">
+        <div class="info-client">
             <h3>👤 Client</h3>
             <p><strong>{{ $vente->client->prenom }} {{ $vente->client->nom }}</strong></p>
             <p>📞 {{ $vente->client->telephone }}</p>
-            @if($vente->client->email)
-                <p>📧 {{ $vente->client->email }}</p>
-            @endif
             @if($vente->client->adresse)
                 <p>📍 {{ $vente->client->adresse }}{{ $vente->client->quartier ? ' - '.$vente->client->quartier : '' }}</p>
             @endif
         </div>
 
-        <!-- Détails de la vente -->
+        <!-- Détails des articles -->
+        <h3>📦 Détails de la commande</h3>
         <table>
             <thead>
                 <tr>
-                    <th>#</th>
                     <th>Produit</th>
-                    <th>Type</th>
                     <th>Qté</th>
-                    <th class="text-right">Prix unitaire</th>
-                    <th class="text-right">Total</th>
+                    <th>Prix unit.</th>
+                    <th>Total</th>
                 </tr>
             </thead>
             <tbody>
-                @php $i = 1; @endphp
-                @foreach($vente->details as $detail)
-                <tr>
-                    <td>{{ $i++ }}</td>
-                    <td>{{ $detail->nom_produit }}</td>
-                    <td>{{ $detail->type == 'article' ? '📦 Article' : '🎒 Kit' }}</td>
-                    <td class="text-center">{{ $detail->quantite }}</td>
-                    <td class="text-right">{{ number_format($detail->prix_unitaire, 0, ',', ' ') }} F</td>
-                    <td class="text-right">{{ number_format($detail->total_ligne, 0, ',', ' ') }} F</td>
+                @php $totalItems = 0; @endphp
+                @if($vente->items)
+                    @foreach(json_decode($vente->items, true) as $item)
+                    <tr>
+                        <td>{{ $item['nom'] }} @if($item['type'] == 'kit') <span class="badge-promo">Kit</span> @endif</td>
+                        <td>{{ $item['quantite'] }}</td>
+                        <td class="montant">{{ number_format($item['prix'], 0, ',', ' ') }} F</td>
+                        <td class="montant">{{ number_format($item['total'], 0, ',', ' ') }} F</td>
+                    </tr>
+                    @php $totalItems += $item['total']; @endphp
+                    @endforeach
+                @else
+                    @if($vente->type_vente == 'kit' && $vente->kit)
+                        @foreach($vente->kit->articles as $article)
+                        <tr>
+                            <td>{{ $article->nom_article }}</td>
+                            <td>{{ $article->pivot->quantite }}</td>
+                            <td class="montant">{{ number_format($article->prix_vente, 0, ',', ' ') }} F</td>
+                            <td class="montant">{{ number_format($article->prix_vente * $article->pivot->quantite, 0, ',', ' ') }} F</td>
+                        </tr>
+                        @php $totalItems += $article->prix_vente * $article->pivot->quantite; @endphp
+                        @endforeach
+                    @elseif($vente->article)
+                        <tr>
+                            <td>{{ $vente->article->nom_article }}</td>
+                            <td>{{ $vente->quantite }}</td>
+                            <td class="montant">{{ number_format($vente->article->prix_vente, 0, ',', ' ') }} F</td>
+                            <td class="montant">{{ number_format($vente->article->prix_vente * $vente->quantite, 0, ',', ' ') }} F</td>
+                        </tr>
+                        @php $totalItems += $vente->article->prix_vente * $vente->quantite; @endphp
+                    @endif
+                @endif
+                <tr class="total-row">
+                    <td colspan="3" style="text-align:right;">Sous-total</td>
+                    <td class="montant">{{ number_format($totalItems, 0, ',', ' ') }} F</td>
                 </tr>
-                @endforeach
             </tbody>
         </table>
 
         <!-- Récapitulatif -->
         <div class="recap">
-            <div class="recap-item">
-                <span>📊 Montant HT</span>
-                <span>{{ number_format($vente->montant_ht, 0, ',', ' ') }} F</span>
-            </div>
-            <div class="recap-item">
-                <span>📊 TVA (18%)</span>
-                <span>{{ number_format($vente->tva, 0, ',', ' ') }} F</span>
-            </div>
-            @if($vente->remise > 0)
-            <div class="recap-item" style="color: #16a34a;">
-                <span>🎯 Remise</span>
-                <span>-{{ number_format($vente->remise, 0, ',', ' ') }} F</span>
-            </div>
-            @endif
-            @if($vente->frais_livraison > 0)
-            <div class="recap-item">
-                <span>🚚 Frais livraison</span>
-                <span>{{ number_format($vente->frais_livraison, 0, ',', ' ') }} F</span>
-            </div>
-            @endif
-            @if($vente->frais_carnet > 0)
-            <div class="recap-item">
-                <span>📕 Frais carnet</span>
-                <span>{{ number_format($vente->frais_carnet, 0, ',', ' ') }} F</span>
-            </div>
-            @endif
+            <div class="recap-item"><span>💰 Sous-total</span><span>{{ number_format($totalItems, 0, ',', ' ') }} F</span></div>
+            <div class="recap-item"><span>📊 TVA (18%)</span><span>{{ number_format($totalItems * 0.18, 0, ',', ' ') }} F</span></div>
+            <div class="recap-item"><span>💳 Remise</span><span>-{{ number_format($vente->remise ?? 0, 0, ',', ' ') }} F</span></div>
+            <div class="recap-item"><span>🚚 Frais livraison</span><span>{{ number_format($vente->frais_livraison ?? 0, 0, ',', ' ') }} F</span></div>
+            <div class="recap-item"><span>📋 Frais carnet</span><span>{{ number_format($vente->frais_carnet ?? 0, 0, ',', ' ') }} F</span></div>
             <div class="recap-item total">
-                <span>💰 NET À PAYER</span>
-                <span>{{ number_format($vente->net_a_payer, 0, ',', ' ') }} F</span>
+                <span>💰 TOTAL</span>
+                <span>{{ number_format($vente->montant_total, 0, ',', ' ') }} F</span>
             </div>
         </div>
 
         <!-- Paiement -->
-        <div style="margin-top: 20px; padding: 15px; background: #eff6ff; border-radius: 8px;">
-            <h4 style="color: #1e40af; margin-bottom: 5px;">💳 Mode de paiement</h4>
-            <p><strong>{{ ucfirst($vente->mode_paiement ?? 'Non spécifié') }}</strong></p>
-            @if($vente->statut == 'en_cours')
-                <p style="margin-top: 10px;">
-                    <strong>✅ Acompte:</strong> {{ number_format($vente->acompte, 0, ',', ' ') }} F
-                    <br>
-                    <strong>📆 Solde:</strong> {{ number_format($vente->solde, 0, ',', ' ') }} F
-                    <br>
-                    <strong>📊 Mensualités:</strong> {{ $vente->nb_mensualites }} x {{ number_format($vente->montant_mensualite, 0, ',', ' ') }} F
-                </p>
-            @endif
-            <p style="margin-top: 5px;">
-                <strong>Statut:</strong>
-                <span class="badge badge-{{ $vente->statut }}">
-                    {{ $vente->statut == 'en_cours' ? '⏳ En cours' : ($vente->statut == 'termine' ? '✅ Terminé' : '❌ Annulé') }}
+        <div class="recap" style="margin-top:10px; background:#eff6ff;">
+            <div class="recap-item"><span>💳 Acompte (1/4)</span><span>{{ number_format($vente->acompte, 0, ',', ' ') }} F</span></div>
+            <div class="recap-item"><span>📆 Solde restant</span><span>{{ number_format($vente->solde, 0, ',', ' ') }} F</span></div>
+            <div class="recap-item"><span>📊 Mensualités</span><span>{{ $vente->nb_mensualites }} x {{ number_format($vente->montant_mensualite, 0, ',', ' ') }} F</span></div>
+            <div class="recap-item total">
+                <span>STATUT</span>
+                <span>
+                    @if($vente->statut == 'en_cours')
+                        <span class="statut-attente">⏳ En cours de paiement</span>
+                    @elseif($vente->statut == 'termine')
+                        <span class="statut-paye">✅ Payé</span>
+                    @else
+                        <span class="statut-retard">⚠️ Annulé</span>
+                    @endif
                 </span>
-            </p>
+            </div>
         </div>
 
         <!-- Échéances -->
         @if($vente->echeances->count() > 0)
-        <div style="margin-top: 20px; padding: 15px; border: 1px solid #dbeafe; border-radius: 8px;">
-            <h4 style="color: #1e40af; margin-bottom: 5px;">📅 Échéances</h4>
-            <table style="margin: 10px 0;">
+        <div style="margin-top:15px; padding:15px; border:1px solid #dbeafe; background:#eff6ff; border-radius:8px;">
+            <h4>📅 Échéances</h4>
+            <table style="margin:10px 0;">
                 <thead>
                     <tr>
-                        <th style="background: #dbeafe; color: #1e40af;">Date</th>
-                        <th style="background: #dbeafe; color: #1e40af;">Montant</th>
-                        <th style="background: #dbeafe; color: #1e40af;">Statut</th>
+                        <th>Date</th>
+                        <th>Montant</th>
+                        <th>Statut</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($vente->echeances as $echeance)
                     <tr>
                         <td>{{ $echeance->date_echeance->format('d/m/Y') }}</td>
-                        <td class="text-right">{{ number_format($echeance->montant_dû, 0, ',', ' ') }} F</td>
-                        <td class="text-center">
+                        <td class="montant">{{ number_format($echeance->montant_dû, 0, ',', ' ') }} F</td>
+                        <td>
                             @if($echeance->statut == 'paye')
-                                <span class="statut-paye">✅ Payé</span>
+                                <span class="statut-paye">Payé</span>
                             @elseif($echeance->statut == 'en_attente')
-                                <span class="statut-attente">⏳ En attente</span>
+                                <span class="statut-attente">En attente</span>
                             @else
-                                <span class="statut-retard">⚠️ En retard</span>
+                                <span class="statut-retard">En retard</span>
                             @endif
                         </td>
                     </tr>
@@ -284,9 +265,10 @@
 
         <!-- Pied de page -->
         <div class="footer">
-            <p>🏫 La Lumiere_Divine - Lomé 📞 92 10 85 45</p>
-            <p>📧 contact@lalumiere-divine.com</p>
-            <p style="margin-top: 5px;">Merci pour votre confiance !</p>
+            <p>Merci pour votre confiance !</p>
+            <p>{{ config('etablissement.nom') }} - {{ config('etablissement.adresse') }}</p>
+            <p>📞 {{ config('etablissement.telephone') }} | ✉️ {{ config('etablissement.email') }}</p>
+            <p style="margin-top:5px; font-size:10px; color:#94a3b8;">Facture générée le {{ now()->format('d/m/Y H:i') }}</p>
         </div>
     </div>
 </body>

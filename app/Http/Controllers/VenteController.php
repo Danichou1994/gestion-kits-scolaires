@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Vente;
-use App\Models\VenteDetail;
 use App\Models\Client;
 use App\Models\Kit;
 use App\Models\Article;
@@ -17,12 +16,12 @@ class VenteController extends Controller
 {
     public function index()
     {
-        $ventes = Vente::with(['client', 'details'])->orderBy('created_at', 'desc')->get();
+        $ventes = Vente::with(['client', 'kit', 'article'])->orderBy('created_at', 'desc')->get();
         $totalVentes = Vente::count();
         $totalChiffre = Vente::sum('montant_total');
         $totalSolde = Vente::sum('solde');
         $ventesEnCours = Vente::where('statut', 'en_cours')->count();
-
+        
         return view('ventes.index', compact('ventes', 'totalVentes', 'totalChiffre', 'totalSolde', 'ventesEnCours'));
     }
 
@@ -38,76 +37,86 @@ class VenteController extends Controller
     {
         $request->validate([
             'client_id' => 'required|exists:clients,id',
-            'items' => 'required|array|min:1',
-            'items.*.type' => 'required|in:article,kit',
-            'items.*.id' => 'required',
-            'items.*.quantite' => 'required|integer|min:1',
         ]);
 
-        $montant_ht = 0;
-        $details = [];
+        // Récupérer les items
+        $items = json_decode($request->items, true);
+        if (empty($items)) {
+            return redirect()->back()->with('error', 'Veuillez ajouter au moins un article ou un kit.');
+        }
 
-        foreach ($request->items as $item) {
-            if ($item['type'] === 'article') {
-                $article = Article::find($item['id']);
-                if (!$article || $article->stock < $item['quantite']) {
-                    return redirect()->back()->with('error', 'Stock insuffisant pour ' . ($article->nom_article ?? 'article'));
-                }
-                $prix = $article->prix_vente;
-                $total_ligne = $prix * $item['quantite'];
-                $details[] = [
-                    'type' => 'article',
-                    'article_id' => $item['id'],
-                    'quantite' => $item['quantite'],
-                    'prix_unitaire' => $prix,
-                    'montant_ht' => $total_ligne,
-                    'total_ligne' => $total_ligne,
-                ];
-                $montant_ht += $total_ligne;
-            } else {
+        $sous_total = 0;
+        $items_data = [];
+        $quantite_totale = 0;
+
+        foreach ($items as $item) {
+            if ($item['type'] == 'kit') {
                 $kit = Kit::find($item['id']);
-                if (!$kit) {
-                    return redirect()->back()->with('error', 'Kit introuvable');
+                if ($kit) {
+                    $prix = $kit->prix_final;
+                    $total = $prix * $item['quantite'];
+                    $sous_total += $total;
+                    $quantite_totale += $item['quantite'];
+                    $items_data[] = [
+                        'type' => 'kit',
+                        'id' => $kit->id,
+                        'nom' => $kit->nom_kit,
+                        'quantite' => $item['quantite'],
+                        'prix' => $prix,
+                        'total' => $total
+                    ];
                 }
-                $prix = $kit->prix_final;
-                $total_ligne = $prix * $item['quantite'];
-                $details[] = [
-                    'type' => 'kit',
-                    'kit_id' => $item['id'],
-                    'quantite' => $item['quantite'],
-                    'prix_unitaire' => $prix,
-                    'montant_ht' => $total_ligne,
-                    'total_ligne' => $total_ligne,
-                ];
-                $montant_ht += $total_ligne;
+            } else {
+                $article = Article::find($item['id']);
+                if ($article) {
+                    if ($article->stock < $item['quantite']) {
+                        return redirect()->back()->with('error', 'Stock insuffisant pour ' . $article->nom_article);
+                    }
+                    $prix = $article->prix_vente;
+                    $total = $prix * $item['quantite'];
+                    $sous_total += $total;
+                    $quantite_totale += $item['quantite'];
+                    $items_data[] = [
+                        'type' => 'article',
+                        'id' => $article->id,
+                        'nom' => $article->nom_article,
+                        'quantite' => $item['quantite'],
+                        'prix' => $prix,
+                        'total' => $total
+                    ];
+                }
             }
         }
 
         // Calculs
-        $tva = $montant_ht * 0.18;
+        $tva = $sous_total * 0.18; // TVA 18%
+        $total_ttc = $sous_total + $tva;
+        $montant_total = $total_ttc;
         $remise = $request->remise ?? 0;
         $frais_livraison = $request->frais_livraison ?? 0;
         $frais_carnet = $request->frais_carnet ?? 0;
-        $montant_total = $montant_ht + $tva - $remise + $frais_livraison + $frais_carnet;
-        $net_a_payer = $montant_total;
+
+        $montant_final = $montant_total - $remise + $frais_livraison + $frais_carnet;
 
         $numero = Vente::genererNumero();
-        $acompte = $montant_total / 4;
-        $solde = $montant_total - $acompte;
+        $acompte = $montant_final / 4;
+        $solde = $montant_final - $acompte;
         $nb_mensualites = $request->nb_mensualites ?? 3;
         $montant_mensualite = $solde / $nb_mensualites;
 
+        // Créer la vente
         $vente = Vente::create([
             'numero_vente' => $numero,
             'client_id' => $request->client_id,
             'type_vente' => 'mixte',
-            'montant_ht' => $montant_ht,
-            'tva' => $tva,
+            'items' => json_encode($items_data),
+            'sous_total' => $sous_total,
+            'total_tva' => $tva,
+            'total_ttc' => $total_ttc,
+            'montant_total' => $montant_final,
             'remise' => $remise,
             'frais_livraison' => $frais_livraison,
             'frais_carnet' => $frais_carnet,
-            'montant_total' => $montant_total,
-            'net_a_payer' => $net_a_payer,
             'acompte' => $acompte,
             'solde' => $solde,
             'nb_mensualites' => $nb_mensualites,
@@ -118,15 +127,9 @@ class VenteController extends Controller
             'notes' => $request->notes,
         ]);
 
-        // Enregistrer les détails
-        foreach ($details as $detail) {
-            $detail['vente_id'] = $vente->id;
-            VenteDetail::create($detail);
-        }
-
-        // Gérer le stock
-        foreach ($request->items as $item) {
-            if ($item['type'] === 'article') {
+        // Mettre à jour les stocks
+        foreach ($items_data as $item) {
+            if ($item['type'] == 'article') {
                 $article = Article::find($item['id']);
                 $stockAvant = $article->stock;
                 $article->stock -= $item['quantite'];
@@ -165,7 +168,7 @@ class VenteController extends Controller
 
     public function show(Vente $vente)
     {
-        $vente->load(['client', 'details', 'details.article', 'details.kit', 'echeances']);
+        $vente->load(['client', 'kit', 'kit.articles', 'article', 'echeances']);
         return view('ventes.show', compact('vente'));
     }
 
@@ -195,7 +198,7 @@ class VenteController extends Controller
 
     public function facture(Vente $vente)
     {
-        $vente->load(['client', 'details', 'details.article', 'details.kit', 'echeances']);
+        $vente->load(['client', 'kit.articles', 'article', 'echeances']);
         $pdf = Pdf::loadView('pdf.facture', compact('vente'));
         $pdf->setPaper('a4', 'portrait');
         return $pdf->download('facture-' . $vente->numero_vente . '.pdf');
@@ -203,13 +206,13 @@ class VenteController extends Controller
 
     public function facturePreview(Vente $vente)
     {
-        $vente->load(['client', 'details', 'details.article', 'details.kit', 'echeances']);
+        $vente->load(['client', 'kit.articles', 'article', 'echeances']);
         return view('pdf.facture-preview', compact('vente'));
     }
 
     public function exportCSV()
     {
-        $ventes = Vente::with(['client', 'details'])->get();
+        $ventes = Vente::with(['client', 'kit', 'article'])->get();
         $filename = storage_path('app/temp/ventes.csv');
 
         if (!is_dir(dirname($filename))) {
@@ -217,13 +220,17 @@ class VenteController extends Controller
         }
 
         $file = fopen($filename, 'w');
-        fputcsv($file, ['N° Vente', 'Date', 'Client', 'Total', 'Acompte', 'Solde', 'Mensualités', 'Statut']);
+        fputcsv($file, ['N° Vente', 'Date', 'Client', 'Type', 'Article/Kit', 'Qté', 'Total', 'Acompte', 'Solde', 'Mensualités', 'Statut']);
 
         foreach ($ventes as $vente) {
+            $item = $vente->type_vente == 'kit' ? $vente->kit->nom_kit ?? 'N/A' : $vente->article->nom_article ?? 'N/A';
             fputcsv($file, [
                 $vente->numero_vente,
                 $vente->date_vente->format('d/m/Y'),
                 $vente->client->nom . ' ' . $vente->client->prenom,
+                $vente->type_vente == 'kit' ? 'Kit' : 'Article',
+                $item,
+                $vente->quantite ?? 1,
                 $vente->montant_total,
                 $vente->acompte,
                 $vente->solde,
