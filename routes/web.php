@@ -37,7 +37,14 @@ Route::resource('ventes', VenteController::class);
 Route::get('/echeances', [EcheanceController::class, 'index'])->name('echeances.index');
 Route::get('/echeances/{echeance}/payer', [EcheanceController::class, 'marquerPayee'])->name('echeances.payer');
 Route::get('/echeances/{echeance}/retard', [EcheanceController::class, 'marquerRetard'])->name('echeances.retard');
-
+// ========== ÉCHÉANCES ==========
+Route::get('/echeances', [EcheanceController::class, 'index'])->name('echeances.index');
+Route::get('/echeances/vente/{vente}', [EcheanceController::class, 'show'])->name('echeances.show');
+Route::get('/echeances/client/{client}', [EcheanceController::class, 'showClient'])->name('echeances.client');
+Route::get('/echeances/{echeance}/payer', [EcheanceController::class, 'marquerPayee'])->name('echeances.payer');
+Route::get('/echeances/{echeance}/retard', [EcheanceController::class, 'marquerRetard'])->name('echeances.retard');
+Route::get('/echeances/{echeance}/attente', [EcheanceController::class, 'marquerAttente'])->name('echeances.attente');
+Route::get('/echeances/export-csv', [EcheanceController::class, 'exportCSV'])->name('echeances.export-csv');
 // ========== STOCK ==========
 Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
 Route::post('/stock', [StockController::class, 'store'])->name('stock.store');
