@@ -84,14 +84,33 @@
         .recap-item {
             display: flex;
             justify-content: space-between;
-            padding: 4px 0;
+            padding: 6px 0;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+        .recap-item:last-child {
+            border-bottom: none;
+        }
+        .recap-item .label {
+            color: #475569;
+        }
+        .recap-item .value {
+            font-weight: bold;
+            text-align: right;
         }
         .recap-item.total {
             border-top: 2px solid #2563EB;
             padding-top: 10px;
             margin-top: 5px;
-            font-weight: bold;
             font-size: 16px;
+            border-bottom: none;
+        }
+        .recap-item.total .label {
+            color: #1e293b;
+            font-weight: bold;
+        }
+        .recap-item.total .value {
+            color: #2563EB;
+            font-size: 18px;
         }
         .footer {
             text-align: center;
@@ -112,6 +131,29 @@
             font-size: 11px;
             display: inline-block;
         }
+        .paiement-section {
+            margin-top: 15px;
+            padding: 15px;
+            border: 1px solid #dbeafe;
+            background: #eff6ff;
+            border-radius: 8px;
+        }
+        .paiement-section .recap-item {
+            border-bottom: 1px dashed #dbeafe;
+        }
+        .paiement-section .recap-item:last-child {
+            border-bottom: none;
+        }
+        .echeances-table {
+            margin-top: 10px;
+        }
+        .echeances-table th {
+            background: #1e40af;
+            font-size: 11px;
+        }
+        .echeances-table td {
+            font-size: 11px;
+        }
     </style>
 </head>
 <body>
@@ -121,8 +163,8 @@
             <div class="header-left">
                 <h1>📚 {{ config('etablissement.nom') }}</h1>
                 <p>{{ config('etablissement.adresse') }}</p>
-                <p>📞 {{ config('etablissement.telephone') }}</p>
-                <p>✉️ {{ config('etablissement.email') }}</p>
+                <p>Tel: {{ config('etablissement.telephone') }}</p>
+                <p>Email: {{ config('etablissement.email') }}</p>
             </div>
             <div class="header-right">
                 <h2>FACTURE</h2>
@@ -133,23 +175,23 @@
 
         <!-- Client -->
         <div class="info-client">
-            <h3>👤 Client</h3>
+            <h3>Client</h3>
             <p><strong>{{ $vente->client->prenom }} {{ $vente->client->nom }}</strong></p>
-            <p>📞 {{ $vente->client->telephone }}</p>
+            <p>Tel: {{ $vente->client->telephone }}</p>
             @if($vente->client->adresse)
-                <p>📍 {{ $vente->client->adresse }}{{ $vente->client->quartier ? ' - '.$vente->client->quartier : '' }}</p>
+                <p>Adresse: {{ $vente->client->adresse }}{{ $vente->client->quartier ? ' - '.$vente->client->quartier : '' }}</p>
             @endif
         </div>
 
         <!-- Détails des articles -->
-        <h3>📦 Détails de la commande</h3>
+        <h3>Details de la commande</h3>
         <table>
             <thead>
                 <tr>
-                    <th>Produit</th>
-                    <th>Qté</th>
-                    <th>Prix unit.</th>
-                    <th>Total</th>
+                    <th style="width:50%;">Produit</th>
+                    <th style="width:15%;">Qté</th>
+                    <th style="width:20%;">Prix unit.</th>
+                    <th style="width:25%;">Total</th>
                 </tr>
             </thead>
             <tbody>
@@ -192,38 +234,59 @@
             </tbody>
         </table>
 
-        <!-- Récapitulatif (sans TVA) -->
+        <!-- Récapitulatif -->
         <div class="recap">
-            <div class="recap-item"><span>💰 Sous-total</span><span>{{ number_format($totalItems, 0, ',', ' ') }} F</span></div>
+            <div class="recap-item">
+                <span class="label">Sous-total</span>
+                <span class="value">{{ number_format($totalItems, 0, ',', ' ') }} F</span>
+            </div>
             @if(($vente->remise ?? 0) > 0)
-            <div class="recap-item"><span>💳 Remise</span><span>-{{ number_format($vente->remise ?? 0, 0, ',', ' ') }} F</span></div>
+            <div class="recap-item">
+                <span class="label">Remise</span>
+                <span class="value" style="color:#16a34a;">- {{ number_format($vente->remise ?? 0, 0, ',', ' ') }} F</span>
+            </div>
             @endif
             @if(($vente->frais_livraison ?? 0) > 0)
-            <div class="recap-item"><span>🚚 Frais livraison</span><span>{{ number_format($vente->frais_livraison ?? 0, 0, ',', ' ') }} F</span></div>
+            <div class="recap-item">
+                <span class="label">Frais livraison</span>
+                <span class="value">{{ number_format($vente->frais_livraison ?? 0, 0, ',', ' ') }} F</span>
+            </div>
             @endif
             @if(($vente->frais_carnet ?? 0) > 0)
-            <div class="recap-item"><span>📋 Frais carnet</span><span>{{ number_format($vente->frais_carnet ?? 0, 0, ',', ' ') }} F</span></div>
+            <div class="recap-item">
+                <span class="label">Frais carnet</span>
+                <span class="value">{{ number_format($vente->frais_carnet ?? 0, 0, ',', ' ') }} F</span>
+            </div>
             @endif
             <div class="recap-item total">
-                <span>💰 TOTAL</span>
-                <span>{{ number_format($vente->montant_total, 0, ',', ' ') }} F</span>
+                <span class="label">TOTAL</span>
+                <span class="value">{{ number_format($vente->montant_total, 0, ',', ' ') }} F</span>
             </div>
         </div>
 
         <!-- Paiement -->
-        <div class="recap" style="margin-top:10px; background:#eff6ff;">
-            <div class="recap-item"><span>💳 Acompte (1/4)</span><span>{{ number_format($vente->acompte, 0, ',', ' ') }} F</span></div>
-            <div class="recap-item"><span>📆 Solde restant</span><span>{{ number_format($vente->solde, 0, ',', ' ') }} F</span></div>
-            <div class="recap-item"><span>📊 Mensualités</span><span>{{ $vente->nb_mensualites }} x {{ number_format($vente->montant_mensualite, 0, ',', ' ') }} F</span></div>
-            <div class="recap-item total">
-                <span>STATUT</span>
-                <span>
+        <div class="paiement-section">
+            <div class="recap-item">
+                <span class="label">Acompte (1/4)</span>
+                <span class="value">{{ number_format($vente->acompte, 0, ',', ' ') }} F</span>
+            </div>
+            <div class="recap-item">
+                <span class="label">Solde restant</span>
+                <span class="value" style="color:#dc2626;">{{ number_format($vente->solde, 0, ',', ' ') }} F</span>
+            </div>
+            <div class="recap-item">
+                <span class="label">Mensualites</span>
+                <span class="value">{{ $vente->nb_mensualites }} x {{ number_format($vente->montant_mensualite, 0, ',', ' ') }} F</span>
+            </div>
+            <div class="recap-item" style="border-bottom: none; padding-top: 5px;">
+                <span class="label">Statut</span>
+                <span class="value">
                     @if($vente->statut == 'en_cours')
-                        <span class="statut-attente">⏳ En cours de paiement</span>
+                        <span class="statut-attente">En cours de paiement</span>
                     @elseif($vente->statut == 'termine')
-                        <span class="statut-paye">✅ Payé</span>
+                        <span class="statut-paye">Paye</span>
                     @else
-                        <span class="statut-retard">⚠️ Annulé</span>
+                        <span class="statut-retard">Annule</span>
                     @endif
                 </span>
             </div>
@@ -232,13 +295,13 @@
         <!-- Échéances -->
         @if($vente->echeances->count() > 0)
         <div style="margin-top:15px; padding:15px; border:1px solid #dbeafe; background:#eff6ff; border-radius:8px;">
-            <h4>📅 Échéances</h4>
-            <table style="margin:10px 0;">
+            <h4 style="margin-bottom:10px;">Echeances</h4>
+            <table class="echeances-table" style="width:100%;">
                 <thead>
                     <tr>
-                        <th>Date</th>
-                        <th>Montant</th>
-                        <th>Statut</th>
+                        <th style="width:33%;">Date</th>
+                        <th style="width:33%;">Montant</th>
+                        <th style="width:34%;">Statut</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -248,7 +311,7 @@
                         <td class="montant">{{ number_format($echeance->montant_dû, 0, ',', ' ') }} F</td>
                         <td>
                             @if($echeance->statut == 'paye')
-                                <span class="statut-paye">Payé</span>
+                                <span class="statut-paye">Paye</span>
                             @elseif($echeance->statut == 'en_attente')
                                 <span class="statut-attente">En attente</span>
                             @else
@@ -266,8 +329,8 @@
         <div class="footer">
             <p>Merci pour votre confiance !</p>
             <p>{{ config('etablissement.nom') }} - {{ config('etablissement.adresse') }}</p>
-            <p>📞 {{ config('etablissement.telephone') }} | ✉️ {{ config('etablissement.email') }}</p>
-            <p style="margin-top:5px; font-size:10px; color:#94a3b8;">Facture générée le {{ now()->format('d/m/Y H:i') }}</p>
+            <p>Tel: {{ config('etablissement.telephone') }} | Email: {{ config('etablissement.email') }}</p>
+            <p style="margin-top:5px; font-size:10px; color:#94a3b8;">Facture generee le {{ now()->format('d/m/Y H:i') }}</p>
         </div>
     </div>
 </body>
