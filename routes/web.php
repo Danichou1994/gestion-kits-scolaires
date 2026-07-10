@@ -54,3 +54,12 @@ Route::get('/stock/article/{article}', [StockController::class, 'historique'])->
 // ========== RAPPORT ==========
 Route::get('/rapport', [RapportController::class, 'index'])->name('rapport.index');
 Route::get('/rapport/pdf', [RapportController::class, 'exportPDF'])->name('rapport.pdf');
+
+use App\Http\Controllers\SyncGoogleSheetsController;
+
+// ========== SYNCHRONISATION GOOGLE SHEETS ==========
+Route::get('/sync-google-sheets', [SyncGoogleSheetsController::class, 'index'])->name('sync.sheets.index');
+Route::get('/sync-google-sheets/all', [SyncGoogleSheetsController::class, 'syncAll'])->name('sync.sheets.all');
+Route::get('/sync-google-sheets/clients', [SyncGoogleSheetsController::class, 'syncClients'])->name('sync.sheets.clients');
+Route::get('/sync-google-sheets/ventes', [SyncGoogleSheetsController::class, 'syncVentes'])->name('sync.sheets.ventes');
+Route::get('/sync-google-sheets/echeances', [SyncGoogleSheetsController::class, 'syncEcheances'])->name('sync.sheets.echeances');

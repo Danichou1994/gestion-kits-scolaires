@@ -24,7 +24,10 @@
                         <a href="{{ route('echeances.index') }}" class="text-white hover:bg-blue-700 px-3 py-2 rounded-lg text-sm">📅 Échéances</a>
                         <a href="{{ route('stock.index') }}" class="text-white hover:bg-blue-700 px-3 py-2 rounded-lg text-sm">📊 Stock</a>
                         <a href="{{ route('rapport.index') }}" class="text-white hover:bg-blue-700 px-3 py-2 rounded-lg text-sm">📊 Rapport</a>
-                    </div>
+                        <a href="{{ route('sync.sheets.index') }}" class="text-white hover:bg-blue-700 px-3 py-2 rounded-lg text-sm transition duration-300 whitespace-nowrap">
+                           📊 Google Sheets
+                        </a> 
+                   </div>
                 </div>
             </div>
         </nav>
