@@ -16,15 +16,19 @@ return [
         ],
 
         'databases' => [
-            'mysql' => [
-                'driver' => 'mysql',
-                'host' => env('DB_HOST', '127.0.0.1'),
-                'port' => env('DB_PORT', '3306'),
-                'database' => env('DB_DATABASE', 'gestion_kits'),
-                'username' => env('DB_USERNAME', 'root'),
-                'password' => env('DB_PASSWORD', ''),
-            ],
+    'mysql' => [
+        'driver' => 'mysql',
+        'host' => env('DB_HOST', '127.0.0.1'),
+        'port' => env('DB_PORT', '3306'),
+        'database' => env('DB_DATABASE', 'gestion_kits'),
+        'username' => env('DB_USERNAME', 'root'),
+        'password' => env('DB_PASSWORD', ''),
+        'dump' => [
+            'use_single_transaction' => true,
+            'timeout' => 60,
         ],
+    ],
+],
     ],
 
     'destination' => [
