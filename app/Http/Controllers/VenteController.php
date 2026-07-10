@@ -84,7 +84,6 @@ class VenteController extends Controller
             }
         }
 
-        // Calculs sans TVA
         $remise = $request->remise ?? 0;
         $frais_livraison = $request->frais_livraison ?? 0;
         $frais_carnet = $request->frais_carnet ?? 0;
@@ -103,7 +102,6 @@ class VenteController extends Controller
             'type_vente' => 'mixte',
             'items' => json_encode($items_data),
             'sous_total' => $sous_total,
-            'total_ht' => $sous_total,
             'montant_total' => $montant_final,
             'remise' => $remise,
             'frais_livraison' => $frais_livraison,
@@ -118,7 +116,6 @@ class VenteController extends Controller
             'notes' => $request->notes,
         ]);
 
-        // Mettre à jour les stocks
         foreach ($items_data as $item) {
             if ($item['type'] == 'article') {
                 $article = Article::find($item['id']);
@@ -141,7 +138,6 @@ class VenteController extends Controller
             }
         }
 
-        // Générer les échéances
         $date_echeance = Carbon::parse($vente->date_vente);
         for ($i = 1; $i <= $nb_mensualites; $i++) {
             $date_echeance->addMonth();

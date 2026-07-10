@@ -13,8 +13,7 @@ class Vente extends Model
         'quantite', 'montant_total', 'remise', 'frais_livraison',
         'frais_carnet', 'acompte', 'solde', 'nb_mensualites',
         'montant_mensualite', 'statut', 'mode_paiement', 'date_vente',
-        'reference_paiement', 'notes', 'items', 'sous_total',
-        'total_ht'
+        'reference_paiement', 'notes', 'items', 'sous_total'
     ];
 
     protected $casts = [

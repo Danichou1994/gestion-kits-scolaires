@@ -43,13 +43,13 @@
         <div class="mt-4">
             <h3 class="font-bold text-lg mb-2">📦 Sélectionner des produits</h3>
             
-            <div class="flex gap-4 mb-4">
+            <div class="flex flex-wrap gap-4 mb-4">
                 <select id="type_select" class="border rounded-lg px-3 py-2">
                     <option value="article">Article</option>
                     <option value="kit">Kit</option>
                 </select>
                 
-                <select id="item_select" class="flex-1 border rounded-lg px-3 py-2">
+                <select id="item_select" class="flex-1 min-w-[200px] border rounded-lg px-3 py-2">
                     <option value="">Sélectionner un produit</option>
                 </select>
                 
@@ -69,8 +69,8 @@
             </div>
         </div>
 
-        <!-- Résumé -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <!-- Paramètres de paiement -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
             <div>
                 <label class="block text-gray-700 mb-2">Mensualités</label>
                 <select name="nb_mensualites" class="w-full border rounded-lg px-3 py-2">
@@ -103,28 +103,24 @@
             <textarea name="notes" class="w-full border rounded-lg px-3 py-2" rows="2"></textarea>
         </div>
 
-        <!-- Récapitulatif des prix -->
+        <!-- Récapitulatif des prix (sans TVA) -->
         <div class="bg-gray-50 rounded-lg p-4 mt-4">
             <h4 class="font-bold text-lg mb-2">💰 Récapitulatif</h4>
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
                     <span class="text-gray-600">Sous-total</span>
                     <div class="text-xl font-bold" id="sous_total_display">0 F</div>
-                </div>
-                <div>
-                    <span class="text-gray-600">TVA (18%)</span>
-                    <div class="text-xl font-bold text-orange-600" id="tva_display">0 F</div>
-                </div>
-                <div>
-                    <span class="text-gray-600">Total TTC</span>
-                    <div class="text-xl font-bold text-blue-600" id="total_ttc_display">0 F</div>
                 </div>
                 <div>
                     <span class="text-gray-600">Remise</span>
                     <div class="text-xl font-bold text-green-600" id="remise_display">0 F</div>
                 </div>
                 <div>
-                    <span class="text-gray-600">Total final</span>
+                    <span class="text-gray-600">Frais livraison</span>
+                    <div class="text-xl font-bold" id="livraison_display">0 F</div>
+                </div>
+                <div>
+                    <span class="text-gray-600">Total</span>
                     <div class="text-2xl font-bold text-blue-600" id="total_final_display">0 F</div>
                 </div>
             </div>
@@ -145,11 +141,9 @@
     let items = [];
     let itemsIndex = 0;
 
-    // Initialiser les données des articles et kits
     const articles = @json($articles);
     const kits = @json($kits);
 
-    // Mettre à jour la liste déroulante selon le type
     document.getElementById('type_select').addEventListener('change', function() {
         const type = this.value;
         const select = document.getElementById('item_select');
@@ -193,7 +187,6 @@
         afficherItems();
         calculerTotaux();
         
-        // Reset quantite
         document.getElementById('quantite_select').value = 1;
     }
 
@@ -229,20 +222,16 @@
 
     function calculerTotaux() {
         const sousTotal = items.reduce((sum, item) => sum + item.total, 0);
-        const tva = sousTotal * 0.18;
-        const totalTTC = sousTotal + tva;
         const remise = parseFloat(document.getElementById('remise').value) || 0;
         const fraisLivraison = parseFloat(document.getElementById('frais_livraison').value) || 0;
         const fraisCarnet = parseFloat(document.getElementById('frais_carnet').value) || 0;
-        const totalFinal = totalTTC - remise + fraisLivraison + fraisCarnet;
+        const totalFinal = sousTotal - remise + fraisLivraison + fraisCarnet;
 
         document.getElementById('sous_total_display').textContent = sousTotal.toLocaleString() + ' F';
-        document.getElementById('tva_display').textContent = tva.toLocaleString() + ' F';
-        document.getElementById('total_ttc_display').textContent = totalTTC.toLocaleString() + ' F';
         document.getElementById('remise_display').textContent = remise.toLocaleString() + ' F';
+        document.getElementById('livraison_display').textContent = fraisLivraison.toLocaleString() + ' F';
         document.getElementById('total_final_display').textContent = totalFinal.toLocaleString() + ' F';
 
-        // Mettre à jour le hidden input
         const itemsData = items.map(item => ({
             type: item.type,
             id: item.id_produit,
@@ -251,9 +240,12 @@
         document.getElementById('items_input').value = JSON.stringify(itemsData);
     }
 
-    // Événements pour recalculer
     document.getElementById('remise').addEventListener('input', calculerTotaux);
     document.getElementById('frais_livraison').addEventListener('input', calculerTotaux);
     document.getElementById('frais_carnet').addEventListener('input', calculerTotaux);
+
+    document.addEventListener('DOMContentLoaded', function() {
+        calculerTotaux();
+    });
 </script>
 @endsection
