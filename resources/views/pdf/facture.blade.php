@@ -161,11 +161,11 @@
         <!-- En-tête avec établissement -->
         <div class="header">
             <div class="header-left">
-                <h1>📚 {{ config('etablissement.nom') }}</h1>
-                <p>{{ config('etablissement.adresse') }}</p>
-                <p>Tel: {{ config('etablissement.telephone') }}</p>
-                <p>Email: {{ config('etablissement.email') }}</p>
-            </div>
+    <h1>📚 {{ config('etablissement.nom') }}</h1>
+    <p>{{ config('etablissement.adresse') }}</p>
+    <p>Tel: {{ config('etablissement.telephone') }}</p>
+    <p>Email: {{ config('etablissement.email') }}</p>
+</div>
             <div class="header-right">
                 <h2>FACTURE</h2>
                 <p class="facture-num">N° {{ $vente->numero_vente }}</p>
@@ -327,11 +327,11 @@
 
         <!-- Pied de page -->
         <div class="footer">
-            <p>Merci pour votre confiance !</p>
-            <p>{{ config('etablissement.nom') }} - {{ config('etablissement.adresse') }}</p>
-            <p>Tel: {{ config('etablissement.telephone') }} | Email: {{ config('etablissement.email') }}</p>
-            <p style="margin-top:5px; font-size:10px; color:#94a3b8;">Facture generee le {{ now()->format('d/m/Y H:i') }}</p>
-        </div>
+    <p>Merci pour votre confiance !</p>
+    <p>{{ config('etablissement.nom') }} - {{ config('etablissement.adresse') }}</p>
+    <p>Tel: {{ config('etablissement.telephone') }} | Email: {{ config('etablissement.email') }}</p>
+    <p style="margin-top:5px; font-size:10px; color:#94a3b8;">Facture generee le {{ now()->format('d/m/Y H:i') }}</p>
+</div>
     </div>
 </body>
 </html>
