@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && docker-php-ext-install pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd zip
 
-# Installer Composer avec moins de mémoire
+# Installer Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Activer Apache mod_rewrite
@@ -27,16 +27,11 @@ RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 # Copier les fichiers du projet
 COPY . /var/www/html
 
-# Installer les dépendances avec optimisation mémoire
-RUN composer install --no-dev --optimize-autoloader --ignore-platform-req=php
+# Installer les dépendances
+RUN composer install --no-dev --prefer-dist --ignore-platform-req=php
 
-# Optimiser les caches Laravel
-RUN php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan view:cache
-
-# Exécuter les migrations
-RUN php artisan migrate --force
+# NE PAS exécuter les migrations ici
+# Elles seront exécutées via la commande Pre-Deploy sur Render
 
 # Configurer les permissions
 RUN chown -R www-data:www-data /var/www/html \
