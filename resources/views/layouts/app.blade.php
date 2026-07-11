@@ -69,8 +69,6 @@
                         <a href="{{ route('echeances.index') }}" class="text-white hover:bg-blue-700 px-3 py-2 rounded-lg text-sm whitespace-nowrap">📅 Échéances</a>
                         <a href="{{ route('stock.index') }}" class="text-white hover:bg-blue-700 px-3 py-2 rounded-lg text-sm whitespace-nowrap">📊 Stock</a>
                         <a href="{{ route('rapport.index') }}" class="text-white hover:bg-blue-700 px-3 py-2 rounded-lg text-sm whitespace-nowrap">📊 Rapport</a>
-                        <a href="{{ route('sync.sheets.index') }}" class="text-white hover:bg-blue-700 px-3 py-2 rounded-lg text-sm whitespace-nowrap">📊 Google Sheets</a>
-                        
                         <!-- Dropdown Sauvegarde -->
                         <div class="dropdown">
                             <button class="text-white hover:bg-blue-700 px-3 py-2 rounded-lg text-sm whitespace-nowrap">

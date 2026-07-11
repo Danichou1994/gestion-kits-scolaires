@@ -161,11 +161,11 @@
         <!-- En-tête avec établissement -->
         <div class="header">
             <div class="header-left">
-    <h1>📚 {{ config('etablissement.nom') }}</h1>
-    <p>{{ config('etablissement.adresse') }}</p>
-    <p>Tel: {{ config('etablissement.telephone') }}</p>
-    <p>Email: {{ config('etablissement.email') }}</p>
-</div>
+                <h1>📚 {{ config('etablissement.nom') }}</h1>
+                <p>{{ config('etablissement.adresse') }}</p>
+                <p>Tel: {{ config('etablissement.telephone') }}</p>
+                <p>Email: {{ config('etablissement.email') }}</p>
+            </div>
             <div class="header-right">
                 <h2>FACTURE</h2>
                 <p class="facture-num">N° {{ $vente->numero_vente }}</p>
@@ -188,7 +188,7 @@
         <table>
             <thead>
                 <tr>
-                    <th style="width:50%;">Produit</th>
+                    <th style="width:40%;">Produit</th>
                     <th style="width:15%;">Qté</th>
                     <th style="width:20%;">Prix unit.</th>
                     <th style="width:25%;">Total</th>
@@ -228,13 +228,13 @@
                     @endif
                 @endif
                 <tr class="total-row">
-                    <td colspan="3" style="text-align:right;">Sous-total</td>
+                    <td colspan="3" style="text-align:right; font-weight:bold;">Sous-total</td>
                     <td class="montant">{{ number_format($totalItems, 0, ',', ' ') }} F</td>
                 </tr>
             </tbody>
         </table>
 
-        <!-- Récapitulatif -->
+        <!-- Récapitulatif complet -->
         <div class="recap">
             <div class="recap-item">
                 <span class="label">Sous-total</span>
@@ -277,6 +277,10 @@
             <div class="recap-item">
                 <span class="label">Mensualites</span>
                 <span class="value">{{ $vente->nb_mensualites }} x {{ number_format($vente->montant_mensualite, 0, ',', ' ') }} F</span>
+            </div>
+            <div class="recap-item">
+                <span class="label">Mode paiement</span>
+                <span class="value">{{ $vente->mode_paiement ?? 'Non renseigné' }}</span>
             </div>
             <div class="recap-item" style="border-bottom: none; padding-top: 5px;">
                 <span class="label">Statut</span>
@@ -327,11 +331,11 @@
 
         <!-- Pied de page -->
         <div class="footer">
-    <p>Merci pour votre confiance !</p>
-    <p>{{ config('etablissement.nom') }} - {{ config('etablissement.adresse') }}</p>
-    <p>Tel: {{ config('etablissement.telephone') }} | Email: {{ config('etablissement.email') }}</p>
-    <p style="margin-top:5px; font-size:10px; color:#94a3b8;">Facture generee le {{ now()->format('d/m/Y H:i') }}</p>
-</div>
+            <p>Merci pour votre confiance !</p>
+            <p>{{ config('etablissement.nom') }} - {{ config('etablissement.adresse') }}</p>
+            <p>Tel: {{ config('etablissement.telephone') }} | Email: {{ config('etablissement.email') }}</p>
+            <p style="margin-top:5px; font-size:10px; color:#94a3b8;">Facture generee le {{ now()->format('d/m/Y H:i') }}</p>
+        </div>
     </div>
 </body>
 </html>

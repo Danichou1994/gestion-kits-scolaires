@@ -64,8 +64,7 @@ Route::get('/sync-google-sheets/all', [SyncGoogleSheetsController::class, 'syncA
 Route::get('/sync-google-sheets/clients', [SyncGoogleSheetsController::class, 'syncClients'])->name('sync.sheets.clients');
 Route::get('/sync-google-sheets/ventes', [SyncGoogleSheetsController::class, 'syncVentes'])->name('sync.sheets.ventes');
 Route::get('/sync-google-sheets/echeances', [SyncGoogleSheetsController::class, 'syncEcheances'])->name('sync.sheets.echeances');
-
 // ========== SAUVEGARDE ==========
-Route::get('/backup/pdf', [BackupController::class, 'downloadPDF'])->name('backup.pdf');
-Route::get('/backup/download-all', [BackupController::class, 'downloadAll'])->name('backup.download-all');
-Route::get('/backup/auto', [BackupController::class, 'autoBackup'])->name('backup.auto');
+Route::get('/backup/pdf', [App\Http\Controllers\BackupController::class, 'downloadPDF'])->name('backup.pdf');
+Route::get('/backup/download-all', [App\Http\Controllers\BackupController::class, 'downloadAll'])->name('backup.download-all');
+Route::get('/backup/now', [App\Http\Controllers\BackupController::class, 'backupNow'])->name('backup.now');
