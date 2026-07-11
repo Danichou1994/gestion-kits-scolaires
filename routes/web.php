@@ -14,7 +14,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 // Page d'accueil
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-
+Route::get('/backup/auto', [App\Http\Controllers\BackupController::class, 'autoBackup'])->name('backup.auto');
 // ========== CLIENTS ==========
 Route::get('/clients/export-csv', [ClientController::class, 'exportCSV'])->name('clients.export-csv');
 Route::resource('clients', ClientController::class);
