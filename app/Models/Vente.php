@@ -48,11 +48,6 @@ class Vente extends Model
         return 'FV-' . date('Ymd') . '-' . str_pad($num, 5, '0', STR_PAD_LEFT);
     }
 
-    public function getMontantTotalFormateAttribute(): string
-    {
-        return number_format($this->montant_total, 0, ',', ' ') . ' F';
-    }
-
     public function getStatutBadgeAttribute(): string
     {
         $badges = [
@@ -63,43 +58,15 @@ class Vente extends Model
         return $badges[$this->statut] ?? $badges['en_cours'];
     }
 
-    public function getTypeVenteLabelAttribute(): string
+    // Sauvegarde automatique après chaque modification
+    protected static function booted()
     {
-        return $this->type_vente == 'kit' ? '🎒 Kit' : '📦 Article';
-    }
-
-    public function getItemsListAttribute(): array
-    {
-        if ($this->items) {
-            return json_decode($this->items, true);
-        }
-        return [];
-    }
-
-    public function getItemsFormattedAttribute(): string
-    {
-        $items = $this->items_list;
-        if (empty($items)) {
-            if ($this->type_vente == 'kit' && $this->kit) {
-                return $this->kit->nom_kit . ' (Kit)';
-            }
-            if ($this->article) {
-                return $this->article->nom_article . ' x' . $this->quantite;
-            }
-            return '-';
-        }
+        static::saved(function ($model) {
+            \App\Http\Controllers\BackupController::autoBackup();
+        });
         
-        $html = '<ul class="list-disc list-inside">';
-        foreach ($items as $item) {
-            $type = $item['type'] ?? 'article';
-            $nom = $item['nom'] ?? 'N/A';
-            $qte = $item['quantite'] ?? 1;
-            $prix = $item['prix'] ?? 0;
-            $total = $item['total'] ?? 0;
-            $icon = $type == 'kit' ? '🎒' : '📦';
-            $html .= "<li>{$icon} {$nom} x{$qte} - " . number_format($total, 0, ',', ' ') . " F</li>";
-        }
-        $html .= '</ul>';
-        return $html;
+        static::deleted(function ($model) {
+            \App\Http\Controllers\BackupController::autoBackup();
+        });
     }
 }

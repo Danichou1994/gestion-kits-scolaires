@@ -30,4 +30,16 @@ class Client extends Model
     {
         return $this->prenom . ' ' . $this->nom;
     }
+
+    // Sauvegarde automatique après chaque modification
+    protected static function booted()
+    {
+        static::saved(function ($model) {
+            \App\Http\Controllers\BackupController::autoBackup();
+        });
+        
+        static::deleted(function ($model) {
+            \App\Http\Controllers\BackupController::autoBackup();
+        });
+    }
 }

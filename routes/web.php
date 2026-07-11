@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BackupController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ClientController;
@@ -63,3 +64,8 @@ Route::get('/sync-google-sheets/all', [SyncGoogleSheetsController::class, 'syncA
 Route::get('/sync-google-sheets/clients', [SyncGoogleSheetsController::class, 'syncClients'])->name('sync.sheets.clients');
 Route::get('/sync-google-sheets/ventes', [SyncGoogleSheetsController::class, 'syncVentes'])->name('sync.sheets.ventes');
 Route::get('/sync-google-sheets/echeances', [SyncGoogleSheetsController::class, 'syncEcheances'])->name('sync.sheets.echeances');
+
+// ========== SAUVEGARDE ==========
+Route::get('/backup/pdf', [BackupController::class, 'downloadPDF'])->name('backup.pdf');
+Route::get('/backup/download-all', [BackupController::class, 'downloadAll'])->name('backup.download-all');
+Route::get('/backup/auto', [BackupController::class, 'autoBackup'])->name('backup.auto');

@@ -31,4 +31,16 @@ class Echeance extends Model
     {
         return $this->statut === 'en_attente' && $this->date_echeance < now();
     }
+
+    // Sauvegarde automatique après chaque modification
+    protected static function booted()
+    {
+        static::saved(function ($model) {
+            \App\Http\Controllers\BackupController::autoBackup();
+        });
+        
+        static::deleted(function ($model) {
+            \App\Http\Controllers\BackupController::autoBackup();
+        });
+    }
 }

@@ -8,16 +8,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Stock extends Model
 {
     protected $fillable = [
-        'article_id',
-        'type_mouvement',
-        'quantite',
-        'prix_unitaire',
-        'vente_id',
-        'reference',
-        'motif',
-        'stock_avant',
-        'stock_apres',
-        'date_mouvement'
+        'article_id', 'type_mouvement', 'quantite', 'prix_unitaire',
+        'vente_id', 'reference', 'motif', 'stock_avant',
+        'stock_apres', 'date_mouvement'
     ];
 
     protected $casts = [
@@ -32,5 +25,17 @@ class Stock extends Model
     public function vente(): BelongsTo
     {
         return $this->belongsTo(Vente::class);
+    }
+
+    // Sauvegarde automatique après chaque modification
+    protected static function booted()
+    {
+        static::saved(function ($model) {
+            \App\Http\Controllers\BackupController::autoBackup();
+        });
+        
+        static::deleted(function ($model) {
+            \App\Http\Controllers\BackupController::autoBackup();
+        });
     }
 }
