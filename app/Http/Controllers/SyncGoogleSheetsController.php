@@ -13,31 +13,28 @@ use Illuminate\Http\Request;
 class SyncGoogleSheetsController extends Controller
 {
     private function ensureJsonFile()
-    {
-        $jsonPath = storage_path('app/google/service-account.json');
-        
-        if (!is_dir(dirname($jsonPath))) {
-            mkdir(dirname($jsonPath), 0777, true);
-        }
-        
-        $jsonContent = env('GOOGLE_SERVICE_ACCOUNT_JSON');
-        if ($jsonContent) {
-            file_put_contents($jsonPath, $jsonContent);
-            return $jsonPath;
-        }
-        
-        $secretPath = '/etc/secrets/google-credentials.json';
-        if (file_exists($secretPath)) {
-            copy($secretPath, $jsonPath);
-            return $jsonPath;
-        }
-        
-        if (file_exists($jsonPath)) {
-            return $jsonPath;
-        }
-        
-        throw new \Exception('Fichier JSON introuvable.');
+{
+    $jsonPath = storage_path('app/google/service-account.json');
+    
+    if (!is_dir(dirname($jsonPath))) {
+        mkdir(dirname($jsonPath), 0777, true);
     }
+    
+    // Si le fichier existe déjà, on l'utilise
+    if (file_exists($jsonPath)) {
+        return $jsonPath;
+    }
+    
+    // Sinon, on essaie de créer à partir de la variable d'environnement
+    $jsonContent = env('GOOGLE_SERVICE_ACCOUNT_JSON');
+    if ($jsonContent) {
+        file_put_contents($jsonPath, $jsonContent);
+        return $jsonPath;
+    }
+    
+    // Dernier recours : utiliser un service en ligne ou une autre méthode
+    throw new \Exception('Fichier JSON introuvable.');
+}
 
     public function index()
     {
