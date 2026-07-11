@@ -12,6 +12,33 @@ use Illuminate\Http\Request;
 
 class SyncGoogleSheetsController extends Controller
 {
+    private function ensureJsonFile()
+    {
+        $jsonPath = storage_path('app/google/service-account.json');
+        
+        if (!is_dir(dirname($jsonPath))) {
+            mkdir(dirname($jsonPath), 0777, true);
+        }
+        
+        $jsonContent = env('GOOGLE_SERVICE_ACCOUNT_JSON');
+        if ($jsonContent) {
+            file_put_contents($jsonPath, $jsonContent);
+            return $jsonPath;
+        }
+        
+        $secretPath = '/etc/secrets/google-credentials.json';
+        if (file_exists($secretPath)) {
+            copy($secretPath, $jsonPath);
+            return $jsonPath;
+        }
+        
+        if (file_exists($jsonPath)) {
+            return $jsonPath;
+        }
+        
+        throw new \Exception('Fichier JSON introuvable.');
+    }
+
     public function index()
     {
         return view('sync-google-sheets.index');
@@ -20,9 +47,10 @@ class SyncGoogleSheetsController extends Controller
     public function syncAll()
     {
         try {
+            $this->ensureJsonFile();
             $spreadsheetId = env('GOOGLE_SHEETS_SPREADSHEET_ID');
-            
-            // ===== CLIENTS =====
+
+            // Clients
             $clients = Client::all();
             if ($clients->count() > 0) {
                 $rows = $clients->map(function($client) {
@@ -44,7 +72,7 @@ class SyncGoogleSheetsController extends Controller
                     ->append($rows);
             }
 
-            // ===== ARTICLES =====
+            // Articles
             $articles = Article::all();
             if ($articles->count() > 0) {
                 $rows = $articles->map(function($article) {
@@ -67,7 +95,7 @@ class SyncGoogleSheetsController extends Controller
                     ->append($rows);
             }
 
-            // ===== KITS =====
+            // Kits
             $kits = Kit::with('articles')->get();
             if ($kits->count() > 0) {
                 $rows = $kits->map(function($kit) {
@@ -93,7 +121,7 @@ class SyncGoogleSheetsController extends Controller
                     ->append($rows);
             }
 
-            // ===== VENTES =====
+            // Ventes
             $ventes = Vente::with(['client', 'kit'])->get();
             if ($ventes->count() > 0) {
                 $rows = $ventes->map(function($vente) {
@@ -118,7 +146,7 @@ class SyncGoogleSheetsController extends Controller
                     ->append($rows);
             }
 
-            // ===== ÉCHÉANCES =====
+            // Échéances
             $echeances = Echeance::with(['client', 'vente'])->get();
             if ($echeances->count() > 0) {
                 $rows = $echeances->map(function($echeance) {
@@ -141,96 +169,6 @@ class SyncGoogleSheetsController extends Controller
             }
 
             return redirect()->back()->with('success', '✅ Toutes les données synchronisées avec Google Sheets !');
-
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', '❌ Erreur : ' . $e->getMessage());
-        }
-    }
-
-    public function syncClients()
-    {
-        try {
-            $clients = Client::all();
-            $rows = $clients->map(function($client) {
-                return [
-                    $client->id,
-                    $client->nom,
-                    $client->prenom,
-                    $client->telephone,
-                    $client->email ?? '-',
-                    $client->adresse ?? '-',
-                    $client->quartier ?? '-',
-                    $client->created_at->format('d/m/Y')
-                ];
-            })->toArray();
-
-            Sheets::spreadsheet(env('GOOGLE_SHEETS_SPREADSHEET_ID'))
-                ->sheet('Clients')
-                ->clear()
-                ->append($rows);
-
-            return redirect()->back()->with('success', '✅ Clients synchronisés !');
-
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', '❌ Erreur : ' . $e->getMessage());
-        }
-    }
-
-    public function syncVentes()
-    {
-        try {
-            $ventes = Vente::with(['client', 'kit'])->get();
-            $rows = $ventes->map(function($vente) {
-                $statut = $vente->statut == 'en_cours' ? 'En cours' : ($vente->statut == 'termine' ? 'Terminé' : 'Annulé');
-                return [
-                    $vente->id,
-                    $vente->numero_vente,
-                    $vente->client->nom . ' ' . $vente->client->prenom,
-                    $vente->kit->nom_kit ?? 'N/A',
-                    $vente->montant_total,
-                    $vente->acompte,
-                    $vente->solde,
-                    $vente->nb_mensualites,
-                    $statut,
-                    $vente->date_vente->format('d/m/Y')
-                ];
-            })->toArray();
-
-            Sheets::spreadsheet(env('GOOGLE_SHEETS_SPREADSHEET_ID'))
-                ->sheet('Ventes')
-                ->clear()
-                ->append($rows);
-
-            return redirect()->back()->with('success', '✅ Ventes synchronisées !');
-
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', '❌ Erreur : ' . $e->getMessage());
-        }
-    }
-
-    public function syncEcheances()
-    {
-        try {
-            $echeances = Echeance::with(['client', 'vente'])->get();
-            $rows = $echeances->map(function($echeance) {
-                $statut = $echeance->statut == 'paye' ? 'Payé' : ($echeance->statut == 'en_attente' ? 'En attente' : 'En retard');
-                return [
-                    $echeance->id,
-                    $echeance->client->nom . ' ' . $echeance->client->prenom,
-                    $echeance->vente->numero_vente ?? 'N/A',
-                    $echeance->montant_dû,
-                    $echeance->date_echeance->format('d/m/Y'),
-                    $statut,
-                    $echeance->date_paiement ? $echeance->date_paiement->format('d/m/Y') : '-'
-                ];
-            })->toArray();
-
-            Sheets::spreadsheet(env('GOOGLE_SHEETS_SPREADSHEET_ID'))
-                ->sheet('Echeances')
-                ->clear()
-                ->append($rows);
-
-            return redirect()->back()->with('success', '✅ Échéances synchronisées !');
 
         } catch (\Exception $e) {
             return redirect()->back()->with('error', '❌ Erreur : ' . $e->getMessage());
