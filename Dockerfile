@@ -27,16 +27,8 @@ RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 # Copier les fichiers du projet
 COPY . /var/www/html
 
-# Créer le fichier .env à partir des variables d'environnement
-RUN echo "APP_ENV=production" > /var/www/html/.env && \
-    echo "APP_DEBUG=false" >> /var/www/html/.env && \
-    echo "APP_KEY=base64:cpGpFhl4Nq07+oKVN+uDXnVyRof6qJE7dL2UhJW1vaU=" >> /var/www/html/.env && \
-    echo "DB_CONNECTION=pgsql" >> /var/www/html/.env && \
-    echo "DB_HOST=dpg-d93oddcvikkc73anslp0-a" >> /var/www/html/.env && \
-    echo "DB_PORT=5432" >> /var/www/html/.env && \
-    echo "DB_DATABASE=gestion_kits_db" >> /var/www/html/.env && \
-    echo "DB_USERNAME=gestion_kits_db_user" >> /var/www/html/.env && \
-    echo "DB_PASSWORD=0CshgDZQZ0tGDqXx
+# Copier le fichier .env.production en .env
+RUN cp /var/www/html/.env.production /var/www/html/.env
 
 # Installer les dépendances
 RUN composer install --no-dev --prefer-dist --ignore-platform-req=php
