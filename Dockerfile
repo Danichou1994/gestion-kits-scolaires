@@ -16,6 +16,19 @@ RUN apt-get update && apt-get install -y \
 # Installer Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+
+# Créer le fichier .env avec les identifiants Supabase
+RUN echo "APP_ENV=production" > /var/www/html/.env && \
+    echo "APP_DEBUG=false" >> /var/www/html/.env && \
+    echo "APP_KEY=base64:cpGpFhl4Nq07+oKVN+uDXnVyRof6qJE7dL2UhJW1vaU=" >> /var/www/html/.env && \
+    echo "DB_CONNECTION=pgsql" >> /var/www/html/.env && \
+    echo "DB_HOST=aws-0-eu-west-1.pooler.supabase.com" >> /var/www/html/.env && \
+    echo "DB_PORT=6543" >> /var/www/html/.env && \
+    echo "DB_DATABASE=postgres" >> /var/www/html/.env && \
+    echo "DB_USERNAME=postgres.mjnarssvktnyfoqxolpa" >> /var/www/html/.env && \
+    echo "DB_PASSWORD=t3vsdaILk70eTq61" >> /var/www/html/.env
+
+
 # Activer Apache mod_rewrite
 RUN a2enmod rewrite
 
