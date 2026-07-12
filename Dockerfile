@@ -32,7 +32,7 @@ RUN echo "APP_ENV=production" > /var/www/html/.env && \
     echo "APP_DEBUG=false" >> /var/www/html/.env && \
     echo "APP_KEY=base64:cpGpFhl4Nq07+oKVN+uDXnVyRof6qJE7dL2UhJW1vaU=" >> /var/www/html/.env && \
     echo "DB_CONNECTION=pgsql" >> /var/www/html/.env && \
-    echo "DB_HOST=aws-0-eu-west-1.pooler.supabase.com" >> /var/www/html/.env && \
+    echo "DB_HOST=108.128.216.176" >> /var/www/html/.env
     echo "DB_PORT=6543" >> /var/www/html/.env && \
     echo "DB_DATABASE=postgres" >> /var/www/html/.env && \
     echo "DB_USERNAME=postgres.mjnarssvktnyfoqxolpa" >> /var/www/html/.env && \
