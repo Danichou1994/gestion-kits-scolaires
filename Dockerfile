@@ -36,7 +36,7 @@ RUN echo "APP_ENV=production" > /var/www/html/.env && \
     echo "DB_PORT=5432" >> /var/www/html/.env && \
     echo "DB_DATABASE=gestion_kits_db" >> /var/www/html/.env && \
     echo "DB_USERNAME=gestion_kits_db_user" >> /var/www/html/.env && \
-    echo "DB_PASSWORD=VU10ETwYRrYOONGrMJl7YSCYsul6gtMe" >> /var/www/html/.env
+    echo "DB_PASSWORD=0CshgDZQZ0tGDqXx
 
 # Installer les dépendances
 RUN composer install --no-dev --prefer-dist --ignore-platform-req=php
