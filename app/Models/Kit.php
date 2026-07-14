@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Carbon\Carbon;
 
 class Kit extends Model
 {
@@ -43,7 +44,7 @@ class Kit extends Model
         $estEnPromo = $this->en_promotion && 
                       $this->date_debut_promo && 
                       $this->date_fin_promo && 
-                      \Carbon\Carbon::now()->between($this->date_debut_promo, $this->date_fin_promo);
+                      Carbon::now()->between($this->date_debut_promo, $this->date_fin_promo);
 
         $prixApresReduction = $total - $this->reduction;
 
@@ -53,15 +54,11 @@ class Kit extends Model
         $this->save();
     }
 
-    // Sauvegarde automatique après chaque modification
-    protected static function booted()
+    public function getEstEnPromotionAttribute(): bool
     {
-        static::saved(function ($model) {
-            \App\Http\Controllers\BackupController::autoBackup();
-        });
-        
-        static::deleted(function ($model) {
-            \App\Http\Controllers\BackupController::autoBackup();
-        });
+        if (!$this->en_promotion || !$this->date_debut_promo || !$this->date_fin_promo) {
+            return false;
+        }
+        return Carbon::now()->between($this->date_debut_promo, $this->date_fin_promo);
     }
 }

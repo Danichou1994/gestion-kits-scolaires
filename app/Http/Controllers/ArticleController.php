@@ -10,7 +10,27 @@ class ArticleController extends Controller
 {
     public function index()
     {
-        $articles = Article::all();
+        $articles = Article::orderBy('actif', 'desc')->get();
+        $beneficeTotal = Article::sum('benefice');
+        $valeurStock = Article::sum(\DB::raw('stock * prix_achat'));
+        $nbArticles = Article::count();
+        $stockTotal = Article::sum('stock');
+        return view('articles.index', compact('articles', 'beneficeTotal', 'valeurStock', 'nbArticles', 'stockTotal'));
+    }
+
+    public function actifs()
+    {
+        $articles = Article::where('actif', true)->get();
+        $beneficeTotal = Article::sum('benefice');
+        $valeurStock = Article::sum(\DB::raw('stock * prix_achat'));
+        $nbArticles = Article::count();
+        $stockTotal = Article::sum('stock');
+        return view('articles.index', compact('articles', 'beneficeTotal', 'valeurStock', 'nbArticles', 'stockTotal'));
+    }
+
+    public function inactifs()
+    {
+        $articles = Article::where('actif', false)->get();
         $beneficeTotal = Article::sum('benefice');
         $valeurStock = Article::sum(\DB::raw('stock * prix_achat'));
         $nbArticles = Article::count();
@@ -37,10 +57,10 @@ class ArticleController extends Controller
             'nom_article' => 'required|string|max:255|unique:articles',
             'code_barre' => 'nullable|string|max:50|unique:articles',
             'categorie' => 'required|string',
-            'prix_achat' => 'required|numeric|min:0|max:999999999999',
-            'prix_vente' => 'required|numeric|min:0|max:999999999999',
-            'stock' => 'required|integer|min:0|max:999999999',
-            'seuil_alerte' => 'nullable|integer|min:0|max:999999999',
+            'prix_achat' => 'required|numeric|min:0',
+            'prix_vente' => 'required|numeric|min:0',
+            'stock' => 'required|integer|min:0',
+            'seuil_alerte' => 'nullable|integer|min:0',
             'unite_mesure' => 'required|string',
             'fournisseur' => 'nullable|string|max:255',
             'emplacement' => 'nullable|string|max:100',
@@ -59,6 +79,7 @@ class ArticleController extends Controller
             'unite_mesure' => $request->unite_mesure,
             'fournisseur' => $request->fournisseur,
             'emplacement' => $request->emplacement,
+            'actif' => true,
         ]);
 
         if ($request->stock > 0) {
@@ -102,10 +123,10 @@ class ArticleController extends Controller
             'nom_article' => 'required|string|max:255|unique:articles,nom_article,' . $article->id,
             'code_barre' => 'nullable|string|max:50|unique:articles,code_barre,' . $article->id,
             'categorie' => 'required|string',
-            'prix_achat' => 'required|numeric|min:0|max:999999999999',
-            'prix_vente' => 'required|numeric|min:0|max:999999999999',
-            'stock' => 'required|integer|min:0|max:999999999',
-            'seuil_alerte' => 'nullable|integer|min:0|max:999999999',
+            'prix_achat' => 'required|numeric|min:0',
+            'prix_vente' => 'required|numeric|min:0',
+            'stock' => 'required|integer|min:0',
+            'seuil_alerte' => 'nullable|integer|min:0',
             'unite_mesure' => 'required|string',
             'fournisseur' => 'nullable|string|max:255',
             'emplacement' => 'nullable|string|max:100',
@@ -131,14 +152,33 @@ class ArticleController extends Controller
 
     public function destroy(Article $article)
     {
+        // Vérifier si l'article est utilisé dans des ventes
+        $utiliseDansVentes = \App\Models\Vente::where('items', 'like', '%"id":' . $article->id . ',"type":"article"%')->count();
+        
+        if ($utiliseDansVentes > 0) {
+            $article->update(['actif' => false]);
+            return redirect()->route('articles.index')->with('info', 'Cet article est utilisé dans des ventes. Il a été désactivé.');
+        }
+        
         if ($article->kits()->count() > 0) {
-            return redirect()->route('articles.index')->with('error', 'Cet article est utilisé dans des kits.');
+            $article->update(['actif' => false]);
+            return redirect()->route('articles.index')->with('info', 'Cet article est utilisé dans des kits. Il a été désactivé.');
         }
+        
         if ($article->stocks()->count() > 0) {
-            return redirect()->route('articles.index')->with('error', 'Cet article a des mouvements de stock.');
+            $article->update(['actif' => false]);
+            return redirect()->route('articles.index')->with('info', 'Cet article a des mouvements de stock. Il a été désactivé.');
         }
+        
         $article->delete();
-        return redirect()->route('articles.index')->with('success', 'Article supprimé !');
+        return redirect()->route('articles.index')->with('success', 'Article supprimé avec succès !');
+    }
+
+    public function toggleActif(Article $article)
+    {
+        $article->update(['actif' => !$article->actif]);
+        $statut = $article->actif ? 'activé' : 'désactivé';
+        return redirect()->route('articles.index')->with('success', "Article {$statut} avec succès !");
     }
 
     public function exportCSV()
@@ -154,7 +194,7 @@ class ArticleController extends Controller
         fputcsv($file, [
             'ID', 'Code barre', 'Nom', 'Catégorie', "Prix d'achat",
             'Prix de vente', 'Bénéfice', 'Stock', 'Seuil', 'Unité',
-            'Fournisseur', 'Emplacement'
+            'Fournisseur', 'Emplacement', 'Actif'
         ]);
 
         foreach ($articles as $article) {
@@ -170,7 +210,8 @@ class ArticleController extends Controller
                 $article->seuil_alerte,
                 $article->unite_mesure,
                 $article->fournisseur ?? '-',
-                $article->emplacement ?? '-'
+                $article->emplacement ?? '-',
+                $article->actif ? 'Oui' : 'Non'
             ]);
         }
         fclose($file);
@@ -236,6 +277,7 @@ class ArticleController extends Controller
                         'unite_mesure' => $data['Unité'] ?? 'pièce',
                         'fournisseur' => $data['Fournisseur'] ?? null,
                         'emplacement' => $data['Emplacement'] ?? null,
+                        'actif' => true,
                     ]
                 );
                 $count++;

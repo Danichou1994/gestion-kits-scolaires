@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\BackupController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ClientController;
@@ -10,11 +9,12 @@ use App\Http\Controllers\VenteController;
 use App\Http\Controllers\EcheanceController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\RapportController;
+use App\Http\Controllers\BackupController;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 // Page d'accueil
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-Route::get('/backup/auto', [App\Http\Controllers\BackupController::class, 'autoBackup'])->name('backup.auto');
+
 // ========== CLIENTS ==========
 Route::get('/clients/export-csv', [ClientController::class, 'exportCSV'])->name('clients.export-csv');
 Route::resource('clients', ClientController::class);
@@ -22,6 +22,9 @@ Route::resource('clients', ClientController::class);
 // ========== ARTICLES ==========
 Route::get('/articles/export-csv', [ArticleController::class, 'exportCSV'])->name('articles.export-csv');
 Route::post('/articles/import-csv', [ArticleController::class, 'importCSV'])->name('articles.import-csv');
+Route::get('/articles/toggle/{article}', [ArticleController::class, 'toggleActif'])->name('articles.toggle');
+Route::get('/articles/actifs', [ArticleController::class, 'actifs'])->name('articles.actifs');
+Route::get('/articles/inactifs', [ArticleController::class, 'inactifs'])->name('articles.inactifs');
 Route::resource('articles', ArticleController::class);
 
 // ========== KITS ==========
@@ -38,14 +41,9 @@ Route::resource('ventes', VenteController::class);
 Route::get('/echeances', [EcheanceController::class, 'index'])->name('echeances.index');
 Route::get('/echeances/{echeance}/payer', [EcheanceController::class, 'marquerPayee'])->name('echeances.payer');
 Route::get('/echeances/{echeance}/retard', [EcheanceController::class, 'marquerRetard'])->name('echeances.retard');
-// ========== ÉCHÉANCES ==========
-Route::get('/echeances', [EcheanceController::class, 'index'])->name('echeances.index');
-Route::get('/echeances/vente/{vente}', [EcheanceController::class, 'show'])->name('echeances.show');
-Route::get('/echeances/client/{client}', [EcheanceController::class, 'showClient'])->name('echeances.client');
-Route::get('/echeances/{echeance}/payer', [EcheanceController::class, 'marquerPayee'])->name('echeances.payer');
-Route::get('/echeances/{echeance}/retard', [EcheanceController::class, 'marquerRetard'])->name('echeances.retard');
 Route::get('/echeances/{echeance}/attente', [EcheanceController::class, 'marquerAttente'])->name('echeances.attente');
 Route::get('/echeances/export-csv', [EcheanceController::class, 'exportCSV'])->name('echeances.export-csv');
+
 // ========== STOCK ==========
 Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
 Route::post('/stock', [StockController::class, 'store'])->name('stock.store');
@@ -56,15 +54,7 @@ Route::get('/stock/article/{article}', [StockController::class, 'historique'])->
 Route::get('/rapport', [RapportController::class, 'index'])->name('rapport.index');
 Route::get('/rapport/pdf', [RapportController::class, 'exportPDF'])->name('rapport.pdf');
 
-use App\Http\Controllers\SyncGoogleSheetsController;
-
-// ========== SYNCHRONISATION GOOGLE SHEETS ==========
-Route::get('/sync-google-sheets', [SyncGoogleSheetsController::class, 'index'])->name('sync.sheets.index');
-Route::get('/sync-google-sheets/all', [SyncGoogleSheetsController::class, 'syncAll'])->name('sync.sheets.all');
-Route::get('/sync-google-sheets/clients', [SyncGoogleSheetsController::class, 'syncClients'])->name('sync.sheets.clients');
-Route::get('/sync-google-sheets/ventes', [SyncGoogleSheetsController::class, 'syncVentes'])->name('sync.sheets.ventes');
-Route::get('/sync-google-sheets/echeances', [SyncGoogleSheetsController::class, 'syncEcheances'])->name('sync.sheets.echeances');
 // ========== SAUVEGARDE ==========
-Route::get('/backup/pdf', [App\Http\Controllers\BackupController::class, 'downloadPDF'])->name('backup.pdf');
-Route::get('/backup/download-all', [App\Http\Controllers\BackupController::class, 'downloadAll'])->name('backup.download-all');
-Route::get('/backup/now', [App\Http\Controllers\BackupController::class, 'backupNow'])->name('backup.now');
+Route::get('/backup/pdf', [BackupController::class, 'downloadPDF'])->name('backup.pdf');
+Route::get('/backup/download-all', [BackupController::class, 'downloadAll'])->name('backup.download-all');
+Route::get('/backup/auto', [BackupController::class, 'backupNow'])->name('backup.auto');

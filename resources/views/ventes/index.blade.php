@@ -35,7 +35,7 @@
     </div>
 </div>
 
-<!-- Liste -->
+<!-- Liste des ventes -->
 <div class="bg-white rounded-lg shadow overflow-x-auto">
     <table class="w-full">
         <thead class="bg-gray-50">
@@ -55,9 +55,19 @@
             <tr class="border-t hover:bg-gray-50">
                 <td class="px-4 py-2 font-semibold">{{ $vente->numero_vente }}</td>
                 <td class="px-4 py-2">{{ $vente->client->prenom }} {{ $vente->client->nom }}</td>
-                <td class="px-4 py-2">{{ $vente->type_vente == 'kit' ? '🎒 Kit' : '📦 Article' }}</td>
                 <td class="px-4 py-2">
-                    @if($vente->type_vente == 'kit')
+                    @if($vente->type_vente == 'mixte')
+                        🛍️ Mixte
+                    @elseif($vente->type_vente == 'kit')
+                        🎒 Kit
+                    @else
+                        📦 Article
+                    @endif
+                </td>
+                <td class="px-4 py-2">
+                    @if($vente->type_vente == 'mixte')
+                        <span class="text-xs text-gray-500">Multi-produits</span>
+                    @elseif($vente->type_vente == 'kit')
                         {{ $vente->kit->nom_kit ?? 'N/A' }}
                     @else
                         {{ $vente->article->nom_article ?? 'N/A' }}
@@ -78,17 +88,22 @@
                 </td>
                 <td class="px-4 py-2 text-center">
                     <div class="flex flex-wrap justify-center gap-1">
-                        <a href="{{ route('ventes.show', $vente) }}" class="text-blue-600 hover:underline text-sm">📋</a>
-                        <a href="{{ route('ventes.facture', $vente) }}" target="_blank" class="text-purple-600 hover:underline text-sm">📄</a>
+                        <a href="{{ route('ventes.show', $vente) }}" class="text-blue-600 hover:underline text-sm" title="Voir">📋</a>
+                        <a href="{{ route('ventes.facture', $vente) }}" target="_blank" class="text-purple-600 hover:underline text-sm" title="Facture">📄</a>
                         @if($vente->statut == 'en_cours')
-                            <a href="{{ route('ventes.edit', $vente) }}" class="text-yellow-600 hover:underline text-sm">✏️</a>
+                            <a href="{{ route('ventes.edit', $vente) }}" class="text-yellow-600 hover:underline text-sm" title="Modifier">✏️</a>
                         @endif
+                        <form action="{{ route('ventes.destroy', $vente) }}" method="POST" class="inline" onsubmit="return confirm('⚠️ Supprimer cette vente ? Les échéances seront aussi supprimées.')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-red-600 hover:underline text-sm" title="Supprimer">🗑️</button>
+                        </form>
                     </div>
                 </td>
             </tr>
             @empty
             <tr>
-                <td colspan="8" class="px-4 py-8 text-center text-gray-500">Aucune vente</td>
+                <td colspan="8" class="px-4 py-8 text-center text-gray-500">Aucune vente enregistrée</td>
             </tr>
             @endforelse
         </tbody>

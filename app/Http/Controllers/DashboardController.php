@@ -16,7 +16,19 @@ class DashboardController extends Controller
         $totalClients = Client::count();
         $totalVentes = Vente::count();
         $chiffreAffaires = Vente::sum('montant_total');
-        $beneficeTotal = Article::sum('benefice');
+        
+        // === AJOUTÉ POUR LA COMMISSION ===
+        $totalCommission = Vente::sum('commission');
+        $totalNet = Vente::sum('montant_net');
+        $commissionMois = Vente::whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->sum('commission');
+        
+        // === BÉNÉFICE TOTAL CORRIGÉ ===
+        // Avant : Article::sum('benefice') → ❌ additionne juste les bénéfices unitaires
+        // Après : Article::sum(DB::raw('stock * benefice')) → ✅ stock × bénéfice unitaire
+        $beneficeTotal = Article::sum(DB::raw('stock * benefice'));
+        
         $valeurStock = Article::sum(DB::raw('stock * prix_achat'));
         
         $echeancesAujourdhui = Echeance::whereDate('date_echeance', today())
@@ -34,6 +46,7 @@ class DashboardController extends Controller
 
         return view('dashboard', compact(
             'totalClients', 'totalVentes', 'chiffreAffaires',
+            'totalCommission', 'totalNet', 'commissionMois',
             'beneficeTotal', 'valeurStock', 'echeancesAujourdhui',
             'echeancesRetard', 'articlesAlerte', 'ventesMois', 'topArticles'
         ));

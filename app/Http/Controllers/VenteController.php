@@ -90,6 +90,10 @@ class VenteController extends Controller
 
         $montant_final = $sous_total - $remise + $frais_livraison + $frais_carnet;
 
+        // === CALCUL DE LA COMMISSION (10%) ===
+        $commission = $montant_final * 0.10;
+        $montantNet = $montant_final - $commission;
+
         $numero = Vente::genererNumero();
         $acompte = $montant_final / 4;
         $solde = $montant_final - $acompte;
@@ -103,6 +107,8 @@ class VenteController extends Controller
             'items' => json_encode($items_data),
             'sous_total' => $sous_total,
             'montant_total' => $montant_final,
+            'commission' => $commission,        // AJOUTÉ
+            'montant_net' => $montantNet,       // AJOUTÉ
             'remise' => $remise,
             'frais_livraison' => $frais_livraison,
             'frais_carnet' => $frais_carnet,
@@ -116,6 +122,7 @@ class VenteController extends Controller
             'notes' => $request->notes,
         ]);
 
+        // Mettre à jour les stocks
         foreach ($items_data as $item) {
             if ($item['type'] == 'article') {
                 $article = Article::find($item['id']);
@@ -138,6 +145,7 @@ class VenteController extends Controller
             }
         }
 
+        // Générer les échéances
         $date_echeance = Carbon::parse($vente->date_vente);
         for ($i = 1; $i <= $nb_mensualites; $i++) {
             $date_echeance->addMonth();
@@ -156,7 +164,17 @@ class VenteController extends Controller
     public function show(Vente $vente)
     {
         $vente->load(['client', 'kit', 'kit.articles', 'article', 'echeances']);
-        return view('ventes.show', compact('vente'));
+        
+        // Calculs pour la facture
+        $totalPaye = $vente->echeances()->where('statut', 'payé')->sum('montant_du');
+        $totalRestant = $vente->solde - $totalPaye;
+        
+        $prochaineEcheance = $vente->echeances()
+            ->where('statut', 'en_attente')
+            ->orderBy('date_echeance')
+            ->first();
+        
+        return view('ventes.show', compact('vente', 'totalPaye', 'totalRestant', 'prochaineEcheance'));
     }
 
     public function edit(Vente $vente)
@@ -175,12 +193,9 @@ class VenteController extends Controller
 
     public function destroy(Vente $vente)
     {
-        if ($vente->echeances()->where('statut', '!=', 'paye')->count() > 0) {
-            return redirect()->back()->with('error', 'Cette vente a des échéances non payées.');
-        }
         $vente->echeances()->delete();
         $vente->delete();
-        return redirect()->route('ventes.index')->with('success', 'Vente supprimée !');
+        return redirect()->route('ventes.index')->with('success', 'Vente supprimée avec succès !');
     }
 
     public function facture(Vente $vente)
@@ -207,7 +222,7 @@ class VenteController extends Controller
         }
 
         $file = fopen($filename, 'w');
-        fputcsv($file, ['N° Vente', 'Date', 'Client', 'Type', 'Produit', 'Qté', 'Total', 'Acompte', 'Solde', 'Mensualités', 'Statut']);
+        fputcsv($file, ['N° Vente', 'Date', 'Client', 'Type', 'Produit', 'Qté', 'Total', 'Commission', 'Net', 'Acompte', 'Solde', 'Mensualités', 'Statut']);
 
         foreach ($ventes as $vente) {
             $item = $vente->type_vente == 'kit' ? $vente->kit->nom_kit ?? 'N/A' : $vente->article->nom_article ?? 'N/A';
@@ -219,6 +234,8 @@ class VenteController extends Controller
                 $item,
                 $vente->quantite ?? 1,
                 $vente->montant_total,
+                $vente->commission ?? 0,
+                $vente->montant_net ?? 0,
                 $vente->acompte,
                 $vente->solde,
                 $vente->nb_mensualites,

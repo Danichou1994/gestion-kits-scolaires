@@ -13,7 +13,9 @@ class Vente extends Model
         'quantite', 'montant_total', 'remise', 'frais_livraison',
         'frais_carnet', 'acompte', 'solde', 'nb_mensualites',
         'montant_mensualite', 'statut', 'mode_paiement', 'date_vente',
-        'reference_paiement', 'notes', 'items', 'sous_total'
+        'reference_paiement', 'notes', 'items', 'sous_total',
+        'commission',      // AJOUTÉ
+        'montant_net'      // AJOUTÉ
     ];
 
     protected $casts = [
@@ -56,6 +58,23 @@ class Vente extends Model
             'annule' => '<span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm">❌ Annulé</span>'
         ];
         return $badges[$this->statut] ?? $badges['en_cours'];
+    }
+
+    // === MÉTHODES AJOUTÉES POUR LA COMMISSION ===
+    
+    public function getTotalPayeAttribute()
+    {
+        return $this->echeances()->where('statut', 'payé')->sum('montant_du');
+    }
+
+    public function getResteAPayerAttribute()
+    {
+        return $this->solde - $this->total_paye;
+    }
+
+    public function getTotalCommissionAttribute()
+    {
+        return $this->commission ?? 0;
     }
 
     // Sauvegarde automatique après chaque modification

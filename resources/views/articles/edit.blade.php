@@ -5,50 +5,141 @@
 @section('content')
 <h1 class="text-2xl font-bold mb-6">✏️ Modifier un article</h1>
 
-<div class="bg-white rounded-lg shadow p-6 max-w-lg">
+@if($errors->any())
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <ul>
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+<div class="bg-white rounded-lg shadow p-6">
     <form action="{{ route('articles.update', $article) }}" method="POST">
         @csrf
         @method('PUT')
-        
-        <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Nom de l'article *</label>
-            <input type="text" name="nom_article" value="{{ old('nom_article', $article->nom_article) }}" class="w-full border rounded-lg px-3 py-2" required>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Informations principales -->
+            <div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Nom de l'article *</label>
+                    <input type="text" name="nom_article" class="w-full border rounded-lg px-3 py-2" value="{{ old('nom_article', $article->nom_article) }}" required>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Code barre</label>
+                    <input type="text" name="code_barre" class="w-full border rounded-lg px-3 py-2" value="{{ old('code_barre', $article->code_barre) }}">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Catégorie *</label>
+                    <select name="categorie" class="w-full border rounded-lg px-3 py-2" required>
+                        <option value="">Sélectionner une catégorie</option>
+                        @foreach($categories as $key => $label)
+                            <option value="{{ $key }}" {{ old('categorie', $article->categorie) == $key ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <!-- Prix -->
+            <div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Prix d'achat (FCFA) *</label>
+                    <input type="number" name="prix_achat" class="w-full border rounded-lg px-3 py-2" value="{{ old('prix_achat', $article->prix_achat) }}" step="0.01" min="0" required>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Prix de vente (FCFA) *</label>
+                    <input type="number" name="prix_vente" class="w-full border rounded-lg px-3 py-2" value="{{ old('prix_vente', $article->prix_vente) }}" step="0.01" min="0" required>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Bénéfice estimé (FCFA)</label>
+                    <input type="text" class="w-full border rounded-lg px-3 py-2 bg-gray-100" readonly id="benefice_estime" value="{{ old('benefice', $article->benefice) }}">
+                </div>
+            </div>
+
+            <!-- Stock -->
+            <div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Quantité en stock *</label>
+                    <input type="number" name="stock" class="w-full border rounded-lg px-3 py-2" value="{{ old('stock', $article->stock) }}" min="0" required>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Seuil d'alerte</label>
+                    <input type="number" name="seuil_alerte" class="w-full border rounded-lg px-3 py-2" value="{{ old('seuil_alerte', $article->seuil_alerte) }}" min="0">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Unité de mesure *</label>
+                    <select name="unite_mesure" class="w-full border rounded-lg px-3 py-2" required>
+                        @foreach($unites as $unite)
+                            <option value="{{ $unite }}" {{ old('unite_mesure', $article->unite_mesure) == $unite ? 'selected' : '' }}>{{ $unite }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <!-- Informations supplémentaires -->
+            <div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Fournisseur</label>
+                    <input type="text" name="fournisseur" class="w-full border rounded-lg px-3 py-2" value="{{ old('fournisseur', $article->fournisseur) }}">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Emplacement</label>
+                    <input type="text" name="emplacement" class="w-full border rounded-lg px-3 py-2" value="{{ old('emplacement', $article->emplacement) }}" placeholder="Ex: Étagère A1">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">Poids (kg)</label>
+                    <input type="number" name="poids" class="w-full border rounded-lg px-3 py-2" value="{{ old('poids', $article->poids) }}" step="0.01" min="0">
+                </div>
+            </div>
         </div>
-        
-        <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Prix unitaire (FCFA) *</label>
-            <input type="number" name="prix_unitaire" value="{{ old('prix_unitaire', $article->prix_unitaire) }}" class="w-full border rounded-lg px-3 py-2" required min="0">
+
+        <!-- Marque et Description -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div class="mb-4">
+                <label class="block text-gray-700 mb-2">Marque</label>
+                <input type="text" name="marque" class="w-full border rounded-lg px-3 py-2" value="{{ old('marque', $article->marque) }}">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-gray-700 mb-2">Description</label>
+                <textarea name="description" class="w-full border rounded-lg px-3 py-2" rows="2">{{ old('description', $article->description) }}</textarea>
+            </div>
         </div>
-        
-        <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Catégorie *</label>
-            <select name="categorie" class="w-full border rounded-lg px-3 py-2" required>
-                <option value="">Sélectionner une catégorie</option>
-                <option value="Cahiers" @if($article->categorie == 'Cahiers') selected @endif>Cahiers</option>
-                <option value="Stylos" @if($article->categorie == 'Stylos') selected @endif>Stylos</option>
-                <option value="Crayons" @if($article->categorie == 'Crayons') selected @endif>Crayons</option>
-                <option value="Géométrie" @if($article->categorie == 'Géométrie') selected @endif>Géométrie</option>
-                <option value="Accessoires" @if($article->categorie == 'Accessoires') selected @endif>Accessoires</option>
-                <option value="Calculatrices" @if($article->categorie == 'Calculatrices') selected @endif>Calculatrices</option>
-                <option value="Sacs" @if($article->categorie == 'Sacs') selected @endif>Sacs</option>
-                <option value="Autres" @if($article->categorie == 'Autres') selected @endif>Autres</option>
-            </select>
+
+        <div class="flex justify-between items-center mt-6">
+            <button type="submit" class="bg-yellow-600 text-white px-6 py-2 rounded-lg hover:bg-yellow-700">
+                Mettre à jour
+            </button>
+            <a href="{{ route('articles.index') }}" class="text-gray-600 hover:underline">Annuler</a>
         </div>
-        
-        <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Quantité en stock *</label>
-            <input type="number" name="stock" value="{{ old('stock', $article->stock) }}" class="w-full border rounded-lg px-3 py-2" required min="0">
-        </div>
-        
-        <div class="mb-4">
-            <label class="block text-gray-700 mb-2">Seuil d'alerte</label>
-            <input type="number" name="seuil_alerte" value="{{ old('seuil_alerte', $article->seuil_alerte) }}" class="w-full border rounded-lg px-3 py-2" min="0">
-        </div>
-        
-        <button type="submit" class="bg-yellow-600 text-white px-6 py-2 rounded-lg hover:bg-yellow-700">
-            Mettre à jour
-        </button>
-        <a href="{{ route('articles.index') }}" class="ml-2 text-gray-600 hover:underline">Annuler</a>
     </form>
 </div>
+
+<script>
+    // Calcul automatique du bénéfice
+    document.addEventListener('DOMContentLoaded', function() {
+        const prixAchat = document.querySelector('input[name="prix_achat"]');
+        const prixVente = document.querySelector('input[name="prix_vente"]');
+        const benefice = document.getElementById('benefice_estime');
+
+        function calculerBenefice() {
+            const achat = parseFloat(prixAchat.value) || 0;
+            const vente = parseFloat(prixVente.value) || 0;
+            benefice.value = (vente - achat).toFixed(2);
+        }
+
+        prixAchat.addEventListener('input', calculerBenefice);
+        prixVente.addEventListener('input', calculerBenefice);
+    });
+</script>
 @endsection

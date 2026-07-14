@@ -11,7 +11,8 @@ class Article extends Model
     protected $fillable = [
         'nom_article', 'code_barre', 'prix_achat', 'prix_vente',
         'prix_unitaire', 'benefice', 'categorie', 'fournisseur',
-        'unite_mesure', 'emplacement', 'stock', 'seuil_alerte'
+        'unite_mesure', 'emplacement', 'stock', 'seuil_alerte',
+        'poids', 'marque', 'description', 'actif'
     ];
 
     public function kits(): BelongsToMany
@@ -29,15 +30,22 @@ class Article extends Model
         return $this->benefice * $this->stock;
     }
 
-    // Sauvegarde automatique après chaque modification
-    protected static function booted()
+    public function getMargeAttribute(): float
     {
-        static::saved(function ($model) {
-            \App\Http\Controllers\BackupController::autoBackup();
-        });
-        
-        static::deleted(function ($model) {
-            \App\Http\Controllers\BackupController::autoBackup();
-        });
+        if ($this->prix_achat > 0) {
+            return (($this->prix_vente - $this->prix_achat) / $this->prix_achat) * 100;
+        }
+        return 0;
+    }
+
+    // Scopes
+    public function scopeActifs($query)
+    {
+        return $query->where('actif', true);
+    }
+
+    public function scopeInactifs($query)
+    {
+        return $query->where('actif', false);
     }
 }

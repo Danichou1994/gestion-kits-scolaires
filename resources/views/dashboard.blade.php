@@ -8,7 +8,7 @@
     <p class="text-gray-600">Bienvenue sur votre plateforme de gestion</p>
 </div>
 
-<!-- Statistiques -->
+<!-- Statistiques générales -->
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
     <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow p-6 text-white">
         <div class="text-sm opacity-80">Clients</div>
@@ -28,7 +28,27 @@
     </div>
 </div>
 
-<!-- Deuxième ligne -->
+<!-- Statistiques financières avec commission -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow p-6 text-white">
+        <div class="text-sm opacity-80">💰 Total ventes</div>
+        <div class="text-2xl font-bold">{{ number_format($chiffreAffaires ?? 0, 0, ',', ' ') }} F</div>
+    </div>
+    <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow p-6 text-white">
+        <div class="text-sm opacity-80">💵 Ma commission (10%)</div>
+        <div class="text-2xl font-bold">{{ number_format($totalCommission ?? 0, 0, ',', ' ') }} F</div>
+    </div>
+    <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow p-6 text-white">
+        <div class="text-sm opacity-80">🏦 Net établissement</div>
+        <div class="text-2xl font-bold">{{ number_format($totalNet ?? 0, 0, ',', ' ') }} F</div>
+    </div>
+    <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow p-6 text-white">
+        <div class="text-sm opacity-80">📆 Commission ce mois</div>
+        <div class="text-2xl font-bold">{{ number_format($commissionMois ?? 0, 0, ',', ' ') }} F</div>
+    </div>
+</div>
+
+<!-- Autres stats -->
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
     <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow p-6 text-white">
         <div class="text-sm opacity-80">Bénéfice total</div>

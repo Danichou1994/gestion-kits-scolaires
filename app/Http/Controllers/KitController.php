@@ -20,45 +20,43 @@ class KitController extends Controller
         return view('kits.create', compact('articles'));
     }
 
-   public function store(Request $request)
-{
-    $request->validate([
-        'nom_kit' => 'required|unique:kits',
-        'description' => 'nullable|string',
-        'articles' => 'required|array|min:1',
-        'articles.*.id' => 'required|exists:articles,id',
-        'articles.*.quantite' => 'required|integer|min:1',
-        'reduction' => 'nullable|numeric|min:0',
-        'frais_livraison' => 'nullable|numeric|min:0',
-        'frais_carnet' => 'nullable|numeric|min:0',
-        'frais_emballage' => 'nullable|numeric|min:0',
-        'frais_etiquette' => 'nullable|numeric|min:0',
-    ]);
+    public function store(Request $request)
+    {
+        $request->validate([
+            'nom_kit' => 'required|unique:kits',
+            'description' => 'nullable|string',
+            'articles' => 'required|array|min:1',
+            'articles.*.id' => 'required|exists:articles,id',
+            'articles.*.quantite' => 'required|integer|min:1',
+            'reduction' => 'nullable|numeric|min:0',
+            'frais_livraison' => 'nullable|numeric|min:0',
+            'frais_carnet' => 'nullable|numeric|min:0',
+            'frais_emballage' => 'nullable|numeric|min:0',
+            'frais_etiquette' => 'nullable|numeric|min:0',
+        ]);
 
-    $kit = Kit::create([
-        'nom_kit' => $request->nom_kit,
-        'description' => $request->description,
-        'prix_total' => 0,
-        'reduction' => $request->reduction ?? 0,
-        'frais_livraison' => $request->frais_livraison ?? 0,
-        'frais_carnet' => $request->frais_carnet ?? 0,
-        'frais_emballage' => $request->frais_emballage ?? 0,
-        'frais_etiquette' => $request->frais_etiquette ?? 0,
-        'prix_final' => 0,
-        'en_promotion' => $request->has('en_promotion'),
-        'date_debut_promo' => $request->date_debut_promo,
-        'date_fin_promo' => $request->date_fin_promo,
-        'kit_notes' => $request->kit_notes,
-    ]);
+        $kit = Kit::create([
+            'nom_kit' => $request->nom_kit,
+            'description' => $request->description,
+            'reduction' => $request->reduction ?? 0,
+            'frais_livraison' => $request->frais_livraison ?? 0,
+            'frais_carnet' => $request->frais_carnet ?? 0,
+            'frais_emballage' => $request->frais_emballage ?? 0,
+            'frais_etiquette' => $request->frais_etiquette ?? 0,
+            'en_promotion' => $request->has('en_promotion'),
+            'date_debut_promo' => $request->date_debut_promo,
+            'date_fin_promo' => $request->date_fin_promo,
+            'kit_notes' => $request->kit_notes,
+        ]);
 
-    foreach ($request->articles as $article) {
-        $kit->articles()->attach($article['id'], ['quantite' => $article['quantite']]);
+        foreach ($request->articles as $article) {
+            $kit->articles()->attach($article['id'], ['quantite' => $article['quantite']]);
+        }
+
+        $kit->calculerPrixFinal();
+
+        return redirect()->route('kits.index')->with('success', 'Kit créé avec succès !');
     }
-
-    $kit->calculerPrixFinal();
-
-    return redirect()->route('kits.index')->with('success', 'Kit créé avec succès !');
-}
 
     public function show(Kit $kit)
     {
@@ -109,12 +107,16 @@ class KitController extends Controller
 
     public function destroy(Kit $kit)
     {
-        if ($kit->ventes()->count() > 0) {
-            return redirect()->route('kits.index')->with('error', 'Ce kit a des ventes.');
+        // Vérifier si le kit est utilisé dans des ventes (via le champ JSON items)
+        $ventes = \App\Models\Vente::where('items', 'like', '%"id":' . $kit->id . ',"type":"kit"%')->count();
+        
+        if ($ventes > 0) {
+            return redirect()->route('kits.index')->with('error', 'Ce kit est utilisé dans des ventes et ne peut pas être supprimé.');
         }
+        
         $kit->articles()->detach();
         $kit->delete();
-        return redirect()->route('kits.index')->with('success', 'Kit supprimé !');
+        return redirect()->route('kits.index')->with('success', 'Kit supprimé avec succès !');
     }
 
     public function exportCSV()
