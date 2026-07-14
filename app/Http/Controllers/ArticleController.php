@@ -3,14 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
-use App\Models\Stock;
 use Illuminate\Http\Request;
 
 class ArticleController extends Controller
 {
     public function index()
     {
-        $articles = Article::orderBy('actif', 'desc')->get();
+        // Correction : active au lieu de actif
+        $articles = Article::orderBy('active', 'desc')->get();
         $beneficeTotal = Article::sum('benefice');
         $valeurStock = Article::sum(\DB::raw('stock * prix_achat'));
         $nbArticles = Article::count();
@@ -20,7 +20,8 @@ class ArticleController extends Controller
 
     public function actifs()
     {
-        $articles = Article::where('actif', true)->get();
+        // Correction : active au lieu de actif
+        $articles = Article::where('active', true)->get();
         $beneficeTotal = Article::sum('benefice');
         $valeurStock = Article::sum(\DB::raw('stock * prix_achat'));
         $nbArticles = Article::count();
@@ -30,12 +31,21 @@ class ArticleController extends Controller
 
     public function inactifs()
     {
-        $articles = Article::where('actif', false)->get();
+        // Correction : active au lieu de actif
+        $articles = Article::where('active', false)->get();
         $beneficeTotal = Article::sum('benefice');
         $valeurStock = Article::sum(\DB::raw('stock * prix_achat'));
         $nbArticles = Article::count();
         $stockTotal = Article::sum('stock');
         return view('articles.index', compact('articles', 'beneficeTotal', 'valeurStock', 'nbArticles', 'stockTotal'));
+    }
+
+    public function toggleActif(Article $article)
+    {
+        // Correction : active au lieu de actif
+        $article->active = !$article->active;
+        $article->save();
+        return redirect()->back()->with('success', 'Statut de l\'article modifié !');
     }
 
     public function create()
