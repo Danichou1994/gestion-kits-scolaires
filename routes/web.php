@@ -27,7 +27,10 @@ Route::get('/articles/actifs', [ArticleController::class, 'actifs'])->name('arti
 Route::get('/articles/inactifs', [ArticleController::class, 'inactifs'])->name('articles.inactifs');
 Route::resource('articles', ArticleController::class);
 
-// ========== KITS ==========
+// Kits - Routes supplémentaires
+Route::get('/kits/rapport', [KitController::class, 'rapport'])->name('kits.rapport');
+Route::get('/kits/{kit}/duplicate', [KitController::class, 'duplicate'])->name('kits.duplicate');
+Route::get('/kits/api/articles', [KitController::class, 'getArticles'])->name('kits.api.articles');
 Route::get('/kits/export-csv', [KitController::class, 'exportCSV'])->name('kits.export-csv');
 Route::resource('kits', KitController::class);
 

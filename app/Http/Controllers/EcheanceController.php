@@ -17,21 +17,21 @@ class EcheanceController extends Controller
                             ->orderBy('date_echeance', 'asc')
                             ->get();
         
-        // Statistiques
+        // Statistiques - CORRIGÉ : payé au lieu de paye
         $totalEcheances = $echeances->count();
-        $totalPayees = $echeances->where('statut', 'paye')->count();
+        $totalPayees = $echeances->where('statut', 'payé')->count();
         $totalAttente = $echeances->where('statut', 'en_attente')->count();
         $totalRetard = $echeances->where('statut', 'en_retard')->count();
-        $montantTotalDu = $echeances->where('statut', '!=', 'paye')->sum('montant_dû');
+        $montantTotalDu = $echeances->where('statut', '!=', 'payé')->sum('montant_dû');
         
         // Échéances du jour
         $echeancesAujourdhui = $echeances->filter(function($e) {
-            return $e->date_echeance->isToday() && $e->statut != 'paye';
+            return $e->date_echeance->isToday() && $e->statut != 'payé';
         });
         
         // Échéances en retard
         $echeancesRetard = $echeances->filter(function($e) {
-            return $e->date_echeance->isPast() && $e->statut != 'paye';
+            return $e->date_echeance->isPast() && $e->statut != 'payé';
         });
         
         // Ventes avec leurs échéances pour une vue groupée
@@ -68,12 +68,12 @@ class EcheanceController extends Controller
     public function marquerPayee(Echeance $echeance)
     {
         $echeance->update([
-            'statut' => 'paye',
+            'statut' => 'payé',  // CORRIGÉ : avec accent
             'date_paiement' => today()
         ]);
 
         $vente = $echeance->vente;
-        $echeancesRestantes = $vente->echeances()->where('statut', '!=', 'paye')->count();
+        $echeancesRestantes = $vente->echeances()->where('statut', '!=', 'payé')->count();
         
         if ($echeancesRestantes == 0) {
             $vente->update(['statut' => 'termine']);
@@ -113,7 +113,7 @@ class EcheanceController extends Controller
                 $e->vente->numero_vente ?? 'N/A',
                 $e->montant_dû,
                 $e->date_echeance->format('d/m/Y'),
-                $e->statut == 'paye' ? 'Payé' : ($e->statut == 'en_attente' ? 'En attente' : 'En retard'),
+                $e->statut == 'payé' ? 'Payé' : ($e->statut == 'en_attente' ? 'En attente' : 'En retard'),
                 $e->date_paiement ? $e->date_paiement->format('d/m/Y') : '-'
             ]);
         }

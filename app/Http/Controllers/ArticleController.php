@@ -47,16 +47,23 @@ class ArticleController extends Controller
 
     public function create()
     {
-        return view('articles.create');
+        $categories = [
+            'Rangement et organisation' => 'Rangement et organisation',
+            'Géométrie et travaux manuels' => 'Géométrie et travaux manuels',
+            'Coloriage et surlignage' => 'Coloriage et surlignage',
+            'Écriture et correction' => 'Écriture et correction',
+            'Lecture et apprentissage' => 'Lecture et apprentissage'
+        ];
+        return view('articles.create', compact('categories'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'nom_article' => 'required|unique:articles',
-            'prix_achat' => 'required|numeric',
-            'prix_vente' => 'required|numeric',
-            'stock' => 'required|integer',
+            'prix_achat' => 'required|numeric|min:0',
+            'prix_vente' => 'required|numeric|min:0',
+            'stock' => 'required|integer|min:0',
             'categorie' => 'required',
         ]);
 
@@ -85,16 +92,23 @@ class ArticleController extends Controller
 
     public function edit(Article $article)
     {
-        return view('articles.edit', compact('article'));
+        $categories = [
+            'Rangement et organisation' => 'Rangement et organisation',
+            'Géométrie et travaux manuels' => 'Géométrie et travaux manuels',
+            'Coloriage et surlignage' => 'Coloriage et surlignage',
+            'Écriture et correction' => 'Écriture et correction',
+            'Lecture et apprentissage' => 'Lecture et apprentissage'
+        ];
+        return view('articles.edit', compact('article', 'categories'));
     }
 
     public function update(Request $request, Article $article)
     {
         $request->validate([
             'nom_article' => 'required|unique:articles,nom_article,' . $article->id,
-            'prix_achat' => 'required|numeric',
-            'prix_vente' => 'required|numeric',
-            'stock' => 'required|integer',
+            'prix_achat' => 'required|numeric|min:0',
+            'prix_vente' => 'required|numeric|min:0',
+            'stock' => 'required|integer|min:0',
             'categorie' => 'required',
         ]);
 
@@ -119,67 +133,5 @@ class ArticleController extends Controller
     {
         $article->delete();
         return redirect()->route('articles.index')->with('success', 'Article supprimé avec succès !');
-    }
-
-    public function exportCSV()
-    {
-        $articles = Article::all();
-        $filename = storage_path('app/temp/articles.csv');
-
-        if (!is_dir(dirname($filename))) {
-            mkdir(dirname($filename), 0777, true);
-        }
-
-        $file = fopen($filename, 'w');
-        fputcsv($file, ['ID', 'Nom', 'Code barre', 'Prix achat', 'Prix vente', 'Bénéfice', 'Catégorie', 'Fournisseur', 'Stock', 'Seuil alerte', 'Actif']);
-
-        foreach ($articles as $article) {
-            fputcsv($file, [
-                $article->id,
-                $article->nom_article,
-                $article->code_barre,
-                $article->prix_achat,
-                $article->prix_vente,
-                $article->benefice,
-                $article->categorie,
-                $article->fournisseur,
-                $article->stock,
-                $article->seuil_alerte,
-                $article->active ? 'Oui' : 'Non'
-            ]);
-        }
-        fclose($file);
-
-        return response()->download($filename, 'articles-' . date('Y-m-d') . '.csv')->deleteFileAfterSend(true);
-    }
-
-    public function importCSV(Request $request)
-    {
-        $request->validate([
-            'csv_file' => 'required|file|mimes:csv,txt'
-        ]);
-
-        $file = $request->file('csv_file');
-        $handle = fopen($file, 'r');
-        $header = fgetcsv($handle);
-
-        while (($row = fgetcsv($handle)) !== false) {
-            $data = array_combine($header, $row);
-            Article::create([
-                'nom_article' => $data['Nom'],
-                'code_barre' => $data['Code barre'] ?? null,
-                'prix_achat' => $data['Prix achat'],
-                'prix_vente' => $data['Prix vente'],
-                'benefice' => $data['Prix vente'] - $data['Prix achat'],
-                'categorie' => $data['Catégorie'],
-                'fournisseur' => $data['Fournisseur'] ?? null,
-                'stock' => $data['Stock'],
-                'seuil_alerte' => $data['Seuil alerte'] ?? 5,
-                'active' => true,
-            ]);
-        }
-        fclose($handle);
-
-        return redirect()->route('articles.index')->with('success', 'Articles importés avec succès !');
     }
 }

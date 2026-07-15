@@ -14,8 +14,8 @@ class Vente extends Model
         'frais_carnet', 'acompte', 'solde', 'nb_mensualites',
         'montant_mensualite', 'statut', 'mode_paiement', 'date_vente',
         'reference_paiement', 'notes', 'items', 'sous_total',
-        'commission',      // AJOUTÉ
-        'montant_net'      // AJOUTÉ
+        'commission',
+        'montant_net'
     ];
 
     protected $casts = [
@@ -60,11 +60,9 @@ class Vente extends Model
         return $badges[$this->statut] ?? $badges['en_cours'];
     }
 
-    // === MÉTHODES AJOUTÉES POUR LA COMMISSION ===
-    
     public function getTotalPayeAttribute()
     {
-        return $this->echeances()->where('statut', 'payé')->sum('montant_du');
+        return $this->echeances()->where('statut', 'payé')->sum('montant_dû');
     }
 
     public function getResteAPayerAttribute()
@@ -77,7 +75,6 @@ class Vente extends Model
         return $this->commission ?? 0;
     }
 
-    // Sauvegarde automatique après chaque modification
     protected static function booted()
     {
         static::saved(function ($model) {
