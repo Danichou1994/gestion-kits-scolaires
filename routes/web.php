@@ -34,6 +34,7 @@ Route::get('/kits/api/articles', [KitController::class, 'getArticles'])->name('k
 Route::get('/kits/export-csv', [KitController::class, 'exportCSV'])->name('kits.export-csv');
 Route::resource('kits', KitController::class);
 
+
 // ========== VENTES ==========
 Route::get('/ventes/export-csv', [VenteController::class, 'exportCSV'])->name('ventes.export-csv');
 Route::get('/ventes/{vente}/facture', [VenteController::class, 'facture'])->name('ventes.facture');

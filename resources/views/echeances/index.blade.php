@@ -104,15 +104,15 @@
                         <td class="px-4 py-2">{{ $index + 1 }}</td>
                         <td class="px-4 py-2">
                             {{ $echeance->date_echeance->format('d/m/Y') }}
-                            @if($echeance->date_echeance->isToday() && $echeance->statut != 'paye')
+                            @if($echeance->date_echeance->isToday() && $echeance->statut != \App\Models\Echeance::STATUT_PAYE)
                                 <span class="bg-yellow-200 text-yellow-800 px-1 py-0.5 rounded text-xs">Aujourd'hui</span>
                             @endif
                         </td>
                         <td class="px-4 py-2 text-right font-semibold">{{ number_format($echeance->montant_dû, 0, ',', ' ') }} F</td>
                         <td class="px-4 py-2 text-center">
-                            @if($echeance->statut == 'paye')
+                            @if($echeance->statut == \App\Models\Echeance::STATUT_PAYE)
                                 <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">✅ Payé</span>
-                            @elseif($echeance->statut == 'en_retard')
+                            @elseif($echeance->statut == \App\Models\Echeance::STATUT_EN_RETARD)
                                 <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm">⚠️ Retard</span>
                             @else
                                 @if($echeance->date_echeance->isPast())
@@ -123,9 +123,9 @@
                             @endif
                         </td>
                         <td class="px-4 py-2 text-center">
-                            @if($echeance->statut != 'paye')
+                            @if($echeance->statut != \App\Models\Echeance::STATUT_PAYE)
                                 <a href="{{ route('echeances.payer', $echeance) }}" class="text-green-600 hover:text-green-800 text-sm mr-2">✅ Payer</a>
-                                @if($echeance->statut != 'en_retard')
+                                @if($echeance->statut != \App\Models\Echeance::STATUT_EN_RETARD)
                                     <a href="{{ route('echeances.retard', $echeance) }}" class="text-red-600 hover:text-red-800 text-sm mr-2">⚠️ Retard</a>
                                 @endif
                                 <a href="{{ route('echeances.attente', $echeance) }}" class="text-yellow-600 hover:text-yellow-800 text-sm">↩️</a>

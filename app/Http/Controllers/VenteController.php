@@ -36,11 +36,11 @@ class VenteController extends Controller
 
     public function store(Request $request)
     {
-        // Validation
         $request->validate([
             'client_id' => 'required|exists:clients,id',
             'items' => 'required|json',
             'nb_mensualites' => 'required|integer|min:1|max:12',
+            'mode_paiement' => 'required|in:tontine,especes,mobile_money',
         ]);
 
         $items = json_decode($request->items, true);
@@ -58,12 +58,10 @@ class VenteController extends Controller
                 if ($item['type'] == 'kit') {
                     $kit = Kit::with('articles')->find($item['id']);
                     if ($kit) {
-                        // Calculer le prix du kit à partir de ses articles
                         $prixKit = 0;
                         foreach ($kit->articles as $article) {
                             $prixKit += $article->prix_vente * $article->pivot->quantite;
                         }
-                        // Ajouter les frais du kit
                         $prixKit = $prixKit - $kit->reduction + $kit->frais_livraison + $kit->frais_carnet + $kit->frais_emballage + $kit->frais_etiquette;
                         
                         $total = $prixKit * $item['quantite'];
@@ -102,12 +100,18 @@ class VenteController extends Controller
             $remise = $request->remise ?? 0;
             $frais_livraison = $request->frais_livraison ?? 0;
             $frais_carnet = $request->frais_carnet ?? 0;
+            $mode_paiement = $request->mode_paiement ?? 'tontine';
 
-            $montant_final = $sous_total - $remise + $frais_livraison + $frais_carnet;
+            $montant_commande = $sous_total;
 
-            // Calcul de la commission (10%)
-            $commission = $montant_final * 0.10;
-            $montantNet = $montant_final - $commission;
+            if ($mode_paiement == 'tontine') {
+                $commission = $montant_commande * 0.05;
+                $montant_final = $montant_commande - $remise + $commission + $frais_livraison + $frais_carnet;
+            } else {
+                $commission = 0;
+                $montant_final = $montant_commande - $remise + $frais_livraison + $frais_carnet;
+            }
+            $montantNet = $montant_final;
 
             $numero = Vente::genererNumero();
             $acompte = $montant_final / 4;
@@ -115,7 +119,6 @@ class VenteController extends Controller
             $nb_mensualites = $request->nb_mensualites ?? 3;
             $montant_mensualite = $solde / $nb_mensualites;
 
-            // Créer la vente
             $vente = Vente::create([
                 'numero_vente' => $numero,
                 'client_id' => $request->client_id,
@@ -133,12 +136,11 @@ class VenteController extends Controller
                 'nb_mensualites' => $nb_mensualites,
                 'montant_mensualite' => $montant_mensualite,
                 'statut' => 'en_cours',
-                'mode_paiement' => $request->mode_paiement,
+                'mode_paiement' => $mode_paiement,
                 'date_vente' => $request->date_vente ?? now(),
                 'notes' => $request->notes,
             ]);
 
-            // Mettre à jour les stocks
             foreach ($items_data as $item) {
                 if ($item['type'] == 'article') {
                     $article = Article::find($item['id']);
@@ -163,7 +165,6 @@ class VenteController extends Controller
                 }
             }
 
-            // Générer les échéances
             $date_echeance = Carbon::parse($vente->date_vente);
             for ($i = 1; $i <= $nb_mensualites; $i++) {
                 $date_echeance->addMonth();
@@ -189,13 +190,9 @@ class VenteController extends Controller
     public function show(Vente $vente)
     {
         $vente->load(['client', 'echeances']);
-        
-        // Récupérer les items de la vente
         $items = json_decode($vente->items, true) ?? [];
-        
-        // Calcul du total payé
-        $totalPaye = $vente->echeances()->where('statut', 'payé')->sum('montant_dû');
-        $totalRestant = $vente->solde - $totalPaye;
+        $totalPaye = $vente->echeances()->where('statut', 'payé')->sum('montant_dû') ?? 0;
+        $totalRestant = ($vente->solde ?? 0) - $totalPaye;
         
         $prochaineEcheance = $vente->echeances()
             ->where('statut', 'en_attente')
@@ -208,7 +205,7 @@ class VenteController extends Controller
     public function edit(Vente $vente)
     {
         $clients = Client::all();
-        $kits = Kit::all();
+        $kits = Kit::with('articles')->get();
         $articles = Article::where('stock', '>', 0)->get();
         $items = json_decode($vente->items, true) ?? [];
         
@@ -221,6 +218,7 @@ class VenteController extends Controller
             'client_id' => 'required|exists:clients,id',
             'items' => 'required|json',
             'nb_mensualites' => 'required|integer|min:1|max:12',
+            'mode_paiement' => 'required|in:tontine,especes,mobile_money',
         ]);
 
         $items = json_decode($request->items, true);
@@ -231,10 +229,9 @@ class VenteController extends Controller
         DB::beginTransaction();
 
         try {
-            // Récupérer les anciens items pour restaurer les stocks
+            // Restaurer les stocks des anciens articles
             $oldItems = json_decode($vente->items, true) ?? [];
             
-            // Restaurer les stocks des anciens articles
             foreach ($oldItems as $item) {
                 if ($item['type'] == 'article') {
                     $article = Article::find($item['id']);
@@ -294,12 +291,18 @@ class VenteController extends Controller
             $remise = $request->remise ?? 0;
             $frais_livraison = $request->frais_livraison ?? 0;
             $frais_carnet = $request->frais_carnet ?? 0;
+            $mode_paiement = $request->mode_paiement ?? 'tontine';
 
-            $montant_final = $sous_total - $remise + $frais_livraison + $frais_carnet;
+            $montant_commande = $sous_total;
 
-            // Calcul de la commission (10%)
-            $commission = $montant_final * 0.10;
-            $montantNet = $montant_final - $commission;
+            if ($mode_paiement == 'tontine') {
+                $commission = $montant_commande * 0.05;
+                $montant_final = $montant_commande - $remise + $commission + $frais_livraison + $frais_carnet;
+            } else {
+                $commission = 0;
+                $montant_final = $montant_commande - $remise + $frais_livraison + $frais_carnet;
+            }
+            $montantNet = $montant_final;
 
             $acompte = $montant_final / 4;
             $solde = $montant_final - $acompte;
@@ -321,7 +324,7 @@ class VenteController extends Controller
                 'solde' => $solde,
                 'nb_mensualites' => $nb_mensualites,
                 'montant_mensualite' => $montant_mensualite,
-                'mode_paiement' => $request->mode_paiement,
+                'mode_paiement' => $mode_paiement,
                 'date_vente' => $request->date_vente ?? now(),
                 'notes' => $request->notes,
             ]);
@@ -382,7 +385,6 @@ class VenteController extends Controller
         DB::beginTransaction();
 
         try {
-            // Restaurer les stocks
             $items = json_decode($vente->items, true) ?? [];
             foreach ($items as $item) {
                 if ($item['type'] == 'article') {
@@ -394,13 +396,8 @@ class VenteController extends Controller
                 }
             }
 
-            // Supprimer les échéances
             $vente->echeances()->delete();
-            
-            // Supprimer les stocks associés
             Stock::where('vente_id', $vente->id)->delete();
-            
-            // Supprimer la vente
             $vente->delete();
 
             DB::commit();
@@ -414,28 +411,39 @@ class VenteController extends Controller
     }
 
     public function facture(Vente $vente)
-{
-    $vente->load(['client', 'echeances']);
-    $items = json_decode($vente->items, true) ?? [];
-    $totalPaye = $vente->echeances()->where('statut', 'payé')->sum('montant_dû');
-    $totalRestant = $vente->solde - $totalPaye;
-    
-    $pdf = Pdf::loadView('pdf.facture', compact('vente', 'items', 'totalPaye', 'totalRestant'));
-    $pdf->setPaper('a4', 'portrait');
-    
-    // 🔥 NOM DU FICHIER : facture_PRENOM_NOM_NUMERO.pdf
-    $nomClient = $vente->client->prenom . '_' . $vente->client->nom;
-    $nomFichier = 'facture_' . $nomClient . '_' . $vente->numero_vente . '.pdf';
-    
-    return $pdf->download($nomFichier);
-}
+    {
+        $vente->load(['client', 'echeances']);
+        $items = json_decode($vente->items, true) ?? [];
+        $totalPaye = $vente->echeances()->where('statut', 'payé')->sum('montant_dû') ?? 0;
+        $totalRestant = ($vente->solde ?? 0) - $totalPaye;
+        
+        $prochaineEcheance = $vente->echeances()
+            ->where('statut', 'en_attente')
+            ->orderBy('date_echeance')
+            ->first();
+        
+        $pdf = Pdf::loadView('pdf.facture', compact(
+            'vente', 
+            'items', 
+            'totalPaye', 
+            'totalRestant',
+            'prochaineEcheance'
+        ));
+        
+        $pdf->setPaper('a4', 'portrait');
+        
+        $nomClient = $vente->client->prenom . '_' . $vente->client->nom;
+        $nomFichier = 'facture_' . $nomClient . '_' . $vente->numero_vente . '.pdf';
+        
+        return $pdf->download($nomFichier);
+    }
 
     public function facturePreview(Vente $vente)
     {
         $vente->load(['client', 'echeances']);
         $items = json_decode($vente->items, true) ?? [];
-        $totalPaye = $vente->echeances()->where('statut', 'payé')->sum('montant_dû');
-        $totalRestant = $vente->solde - $totalPaye;
+        $totalPaye = $vente->echeances()->where('statut', 'payé')->sum('montant_dû') ?? 0;
+        $totalRestant = ($vente->solde ?? 0) - $totalPaye;
         
         return view('pdf.facture-preview', compact('vente', 'items', 'totalPaye', 'totalRestant'));
     }
@@ -450,13 +458,14 @@ class VenteController extends Controller
         }
 
         $file = fopen($filename, 'w');
-        fputcsv($file, ['N° Vente', 'Date', 'Client', 'Total', 'Commission', 'Net', 'Acompte', 'Solde', 'Mensualités', 'Statut']);
+        fputcsv($file, ['N° Vente', 'Date', 'Client', 'Mode', 'Total', 'Commission', 'Net', 'Acompte', 'Solde', 'Mensualités', 'Statut']);
 
         foreach ($ventes as $vente) {
             fputcsv($file, [
                 $vente->numero_vente,
                 $vente->date_vente->format('d/m/Y'),
                 $vente->client->nom . ' ' . $vente->client->prenom,
+                $vente->mode_paiement ?? 'tontine',
                 $vente->montant_total,
                 $vente->commission ?? 0,
                 $vente->montant_net ?? 0,

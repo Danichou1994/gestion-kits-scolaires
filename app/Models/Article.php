@@ -3,21 +3,45 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Article extends Model
 {
     protected $fillable = [
-        'nom_article', 'code_barre', 'prix_achat', 'prix_vente',
-        'prix_unitaire', 'benefice', 'categorie', 'fournisseur',
-        'unite_mesure', 'emplacement', 'stock', 'seuil_alerte',
-        'poids', 'marque', 'description', 'actif'
+        'nom_article',
+        'code_barre',
+        'prix_unitaire',
+        'prix_achat',
+        'prix_vente',
+        'benefice',
+        'categorie',
+        'fournisseur',
+        'unite_mesure',
+        'stock',
+        'seuil_alerte',
+        'active',
+        'emplacement',
+        'description',
+        'marque',
+        'poids',
     ];
 
-    public function kits(): BelongsToMany
+    protected $casts = [
+        'active' => 'boolean',
+    ];
+
+    // ========== RELATIONS ==========
+
+    public function ventes(): HasMany
     {
-        return $this->belongsToMany(Kit::class, 'composition_kits')->withPivot('quantite');
+        return $this->hasMany(Vente::class);
+    }
+
+    public function kits()
+    {
+        return $this->belongsToMany(Kit::class, 'composition_kits')
+                    ->withPivot('quantite')
+                    ->withTimestamps();
     }
 
     public function stocks(): HasMany
@@ -25,27 +49,38 @@ class Article extends Model
         return $this->hasMany(Stock::class);
     }
 
-    public function getBeneficeTotalAttribute(): float
+    // ========== ATTRIBUTS ==========
+
+    public function getBeneficeTotalAttribute()
     {
         return $this->benefice * $this->stock;
     }
 
-    public function getMargeAttribute(): float
+    // ========== SCOPES ==========
+
+    public function scopeActive($query)
     {
-        if ($this->prix_achat > 0) {
-            return (($this->prix_vente - $this->prix_achat) / $this->prix_achat) * 100;
-        }
-        return 0;
+        return $query->where('active', true);
     }
 
-    // Scopes
-    public function scopeActifs($query)
+    public function scopeInactive($query)
     {
-        return $query->where('actif', true);
+        return $query->where('active', false);
     }
 
-    public function scopeInactifs($query)
+    public function scopeCategorie($query, $categorie)
     {
-        return $query->where('actif', false);
+        return $query->where('categorie', $categorie);
+    }
+
+    public function scopeStockBas($query)
+    {
+        return $query->whereColumn('stock', '<=', 'seuil_alerte');
+    }
+
+    public function scopeRechercher($query, $terme)
+    {
+        return $query->where('nom_article', 'LIKE', '%' . $terme . '%')
+                     ->orWhere('code_barre', 'LIKE', '%' . $terme . '%');
     }
 }

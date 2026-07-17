@@ -56,10 +56,10 @@ class StockController extends Controller
     }
 
     public function historique(Article $article)
-    {
-        $stocks = $article->stocks()->orderBy('created_at', 'desc')->get();
-        return view('stock.historique', compact('article', 'stocks'));
-    }
+{
+    $stocks = $article->stocks()->orderBy('created_at', 'desc')->get();
+    return view('stock.historique', compact('article', 'stocks'));
+}
 
     public function exportCSV()
     {

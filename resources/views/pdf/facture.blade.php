@@ -1,341 +1,544 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <title>Facture #{{ $vente->numero_vente }}</title>
+    <meta charset="UTF-8">
+    <title>Facture {{ $vente->numero_vente }}</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* ========================================== */
+        /* STYLES DE BASE                             */
+        /* ========================================== */
         body { 
-            font-family: 'DejaVu Sans', Arial, sans-serif; 
+            font-family: DejaVu Sans, Arial, sans-serif; 
+            font-size: 11px; 
             padding: 20px;
-            font-size: 12px;
+            margin: 0;
         }
-        .invoice-box {
-            max-width: 800px;
-            margin: auto;
-            padding: 30px;
-            border: 1px solid #e2e8f0;
-            background: white;
+        
+        /* ========================================== */
+        /* GESTION DES SAUTS DE PAGE                   */
+        /* ========================================== */
+        .page-section {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            page-break-after: avoid !important;
+            break-after: avoid !important;
         }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 3px solid #2563EB;
-            padding-bottom: 20px;
-            margin-bottom: 20px;
+        
+        .page-table {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
         }
-        .header-left h1 {
-            color: #2563EB;
-            font-size: 24px;
-        }
-        .header-left p {
-            color: #64748b;
-            font-size: 12px;
-            margin: 2px 0;
-        }
-        .header-right {
-            text-align: right;
-        }
-        .header-right h2 {
-            color: #1e293b;
-            font-size: 22px;
-        }
-        .header-right .facture-num {
-            color: #2563EB;
-            font-weight: bold;
-            font-size: 14px;
-        }
-        .info-client {
-            background: #f1f5f9;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        .info-client h3 { color: #1e293b; margin-bottom: 5px; }
-        .info-client p { color: #475569; font-size: 12px; margin: 2px 0; }
+        
+        /* Pour les tableaux longs */
         table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
+            page-break-inside: auto !important;
+            break-inside: auto !important;
         }
-        th {
-            background: #2563EB;
-            color: white;
-            padding: 8px;
-            text-align: left;
-            font-size: 12px;
+        
+        tr {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
         }
-        td {
-            padding: 8px;
-            border-bottom: 1px solid #e2e8f0;
-            font-size: 12px;
+        
+        thead {
+            display: table-header-group !important;
         }
-        .total-row {
-            background: #f1f5f9;
-            font-weight: bold;
+        
+        tfoot {
+            display: table-footer-group !important;
         }
-        .montant { text-align: right; }
-        .recap {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f1f5f9;
-            border-radius: 8px;
+        
+        /* ========================================== */
+        /* STYLES DE MISE EN PAGE                     */
+        /* ========================================== */
+        .header { 
+            text-align: center; 
+            border-bottom: 2px solid #2563EB; 
+            padding-bottom: 10px; 
         }
-        .recap-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 6px 0;
-            border-bottom: 1px dashed #e2e8f0;
+        
+        .title { 
+            font-size: 18px; 
+            font-weight: bold; 
+            color: #2563EB; 
         }
-        .recap-item:last-child {
-            border-bottom: none;
+        
+        .subtitle { 
+            color: #666; 
+            font-size: 12px; 
         }
-        .recap-item .label {
-            color: #475569;
+        
+        .client-info { 
+            background: #f8f9fa; 
+            padding: 10px; 
+            border-radius: 5px; 
+            margin: 10px 0; 
         }
-        .recap-item .value {
-            font-weight: bold;
-            text-align: right;
+        
+        .section-title { 
+            font-weight: bold; 
+            font-size: 13px; 
+            margin: 10px 0 5px 0; 
+            color: #1E40AF; 
         }
-        .recap-item.total {
-            border-top: 2px solid #2563EB;
-            padding-top: 10px;
-            margin-top: 5px;
-            font-size: 16px;
-            border-bottom: none;
+        
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin: 5px 0; 
         }
-        .recap-item.total .label {
-            color: #1e293b;
-            font-weight: bold;
+        
+        th { 
+            background: #2563EB; 
+            color: white; 
+            padding: 6px; 
+            text-align: left; 
+            font-size: 10px; 
         }
-        .recap-item.total .value {
-            color: #2563EB;
-            font-size: 18px;
+        
+        td { 
+            padding: 5px; 
+            border-bottom: 1px solid #ddd; 
         }
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #e2e8f0;
-            color: #94a3b8;
-            font-size: 11px;
+        
+        .text-right { 
+            text-align: right; 
         }
-        .statut-paye { color: #16a34a; font-weight: bold; }
-        .statut-attente { color: #d97706; font-weight: bold; }
-        .statut-retard { color: #dc2626; font-weight: bold; }
-        .badge-promo {
-            background: #dc2626;
-            color: white;
-            padding: 2px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            display: inline-block;
+        
+        .text-center { 
+            text-align: center; 
         }
-        .paiement-section {
-            margin-top: 15px;
-            padding: 15px;
-            border: 1px solid #dbeafe;
-            background: #eff6ff;
-            border-radius: 8px;
+        
+        .font-bold { 
+            font-weight: bold; 
         }
-        .paiement-section .recap-item {
-            border-bottom: 1px dashed #dbeafe;
+        
+        .total-row { 
+            background: #DBEAFE; 
+            font-weight: bold; 
         }
-        .paiement-section .recap-item:last-child {
-            border-bottom: none;
+        
+        .commission-box { 
+            background: #EFF6FF; 
+            border: 2px solid #93C5FD; 
+            padding: 10px; 
+            border-radius: 5px; 
+            margin: 10px 0; 
         }
-        .echeances-table {
-            margin-top: 10px;
+        
+        .recap-box { 
+            background: #F0FDF4; 
+            border: 2px solid #86EFAC; 
+            padding: 10px; 
+            border-radius: 5px; 
+            margin: 10px 0; 
         }
-        .echeances-table th {
-            background: #1e40af;
-            font-size: 11px;
+        
+        .exonere-box { 
+            background: #F0FDF4; 
+            border: 2px solid #86EFAC; 
+            padding: 10px; 
+            border-radius: 5px; 
+            margin: 10px 0; 
         }
-        .echeances-table td {
-            font-size: 11px;
+        
+        .footer { 
+            text-align: center; 
+            margin-top: 20px; 
+            color: #666; 
+            font-size: 9px; 
+            border-top: 1px solid #ddd; 
+            padding-top: 10px; 
+        }
+        
+        .text-blue { 
+            color: #2563EB; 
+        }
+        
+        .text-green { 
+            color: #16A34A; 
+        }
+        
+        .text-red { 
+            color: #DC2626; 
+        }
+        
+        .text-yellow { 
+            color: #F59E0B; 
+        }
+        
+        .grid-2 { 
+            display: table; 
+            width: 100%; 
+        }
+        
+        .grid-2 > div { 
+            display: table-cell; 
+            width: 50%; 
+            padding: 5px; 
+            vertical-align: top; 
+        }
+        
+        .box { 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+            padding: 8px; 
+            margin: 3px; 
+        }
+        
+        .bg-blue-50 { 
+            background: #EFF6FF; 
+        }
+        
+        .bg-green-50 { 
+            background: #F0FDF4; 
         }
     </style>
 </head>
 <body>
-    <div class="invoice-box">
-        <!-- En-tête avec établissement -->
-        <div class="header">
-            <div class="header-left">
-                <h1>📚 {{ config('etablissement.nom') }}</h1>
-                <p>{{ config('etablissement.adresse') }}</p>
-                <p>Tel: {{ config('etablissement.telephone') }}</p>
-                <p>Email: {{ config('etablissement.email') }}</p>
-            </div>
-            <div class="header-right">
-                <h2>FACTURE</h2>
-                <p class="facture-num">N° {{ $vente->numero_vente }}</p>
-                <p>Date: {{ $vente->date_vente->format('d/m/Y') }}</p>
-            </div>
-        </div>
 
-        <!-- Client -->
-        <div class="info-client">
-            <h3>Client</h3>
-            <p><strong>{{ $vente->client->prenom }} {{ $vente->client->nom }}</strong></p>
-            <p>Tel: {{ $vente->client->telephone }}</p>
-            @if($vente->client->adresse)
-                <p>Adresse: {{ $vente->client->adresse }}{{ $vente->client->quartier ? ' - '.$vente->client->quartier : '' }}</p>
+    <!-- ========================================== -->
+    <!-- EN-TÊTE                                     -->
+    <!-- ========================================== -->
+    <div class="header page-section">
+        <h1 class="title">LA GRÂCE LUMINEUSE</h1>
+        <p class="subtitle">Lomé - Togo</p>
+        <p>📞 92108545 | 📧 gracelumineuse01@gmail.com</p>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TITRE FACTURE                                -->
+    <!-- ========================================== -->
+    <div style="text-align: center; margin: 10px 0;" class="page-section">
+        <h2 style="font-size: 16px;">
+            FACTURE <span style="color: #2563EB;">{{ $vente->numero_vente }}</span>
+        </h2>
+        <p style="margin: 2px 0;">
+            Client : <strong>{{ $vente->client->prenom ?? '' }} {{ $vente->client->nom ?? '' }}</strong>
+        </p>
+        <p style="margin: 2px 0;">Date : {{ $vente->date_vente->format('d/m/Y') }}</p>
+        <p style="margin: 2px 0;">
+            Statut : 
+            @if($vente->statut == 'en_cours')
+                <span style="color: #F59E0B; font-weight: bold;">⏳ En cours</span>
+            @elseif($vente->statut == 'termine')
+                <span style="color: #16A34A; font-weight: bold;">✅ Terminé</span>
+            @else
+                <span style="color: #DC2626; font-weight: bold;">❌ Annulé</span>
             @endif
-        </div>
+        </p>
+        <p style="margin: 2px 0;">
+            Mode de paiement :
+            @if($vente->mode_paiement == 'especes')
+                <span style="color: #16A34A; font-weight: bold;">💵 Comptant</span>
+            @elseif($vente->mode_paiement == 'mobile_money')
+                <span style="color: #2563EB; font-weight: bold;">📱 Mobile Money</span>
+            @else
+                <span style="color: #F59E0B; font-weight: bold;">🔄 Tontine</span>
+            @endif
+        </p>
+    </div>
 
-        <!-- Détails des articles -->
-        <h3>Details de la commande</h3>
-        <table>
+    <!-- ========================================== -->
+    <!-- INFOS CLIENT                                -->
+    <!-- ========================================== -->
+    <div class="client-info page-section">
+        <p style="margin: 2px 0;"><strong>👤 CLIENT</strong></p>
+        <p style="margin: 2px 0;"><strong>{{ $vente->client->prenom ?? '' }} {{ $vente->client->nom ?? '' }}</strong></p>
+        <p style="margin: 2px 0;">📞 {{ $vente->client->telephone ?? '' }}</p>
+        @if(isset($vente->client->quartier) && $vente->client->quartier)
+            <p style="margin: 2px 0;">📍 {{ $vente->client->quartier }}</p>
+        @endif
+    </div>
+
+    <!-- ========================================== -->
+    <!-- DÉTAIL DE LA COMMANDE                       -->
+    <!-- ========================================== -->
+    <div class="page-section">
+        <p class="section-title">📦 DÉTAIL DE LA COMMANDE</p>
+        <table class="page-table">
             <thead>
                 <tr>
-                    <th style="width:40%;">Produit</th>
-                    <th style="width:15%;">Qté</th>
-                    <th style="width:20%;">Prix unit.</th>
-                    <th style="width:25%;">Total</th>
+                    <th>Produit</th>
+                    <th class="text-center">Qté</th>
+                    <th class="text-right">Prix unit.</th>
+                    <th class="text-right">Total</th>
                 </tr>
             </thead>
             <tbody>
-                @php $totalItems = 0; @endphp
-                @if($vente->items)
-                    @foreach(json_decode($vente->items, true) as $item)
-                    <tr>
-                        <td>{{ $item['nom'] }} @if($item['type'] == 'kit') <span class="badge-promo">Kit</span> @endif</td>
-                        <td>{{ $item['quantite'] }}</td>
-                        <td class="montant">{{ number_format($item['prix'], 0, ',', ' ') }} F</td>
-                        <td class="montant">{{ number_format($item['total'], 0, ',', ' ') }} F</td>
-                    </tr>
-                    @php $totalItems += $item['total']; @endphp
-                    @endforeach
-                @else
-                    @if($vente->type_vente == 'kit' && $vente->kit)
-                        @foreach($vente->kit->articles as $article)
-                        <tr>
-                            <td>{{ $article->nom_article }}</td>
-                            <td>{{ $article->pivot->quantite }}</td>
-                            <td class="montant">{{ number_format($article->prix_vente, 0, ',', ' ') }} F</td>
-                            <td class="montant">{{ number_format($article->prix_vente * $article->pivot->quantite, 0, ',', ' ') }} F</td>
-                        </tr>
-                        @php $totalItems += $article->prix_vente * $article->pivot->quantite; @endphp
-                        @endforeach
-                    @elseif($vente->article)
-                        <tr>
-                            <td>{{ $vente->article->nom_article }}</td>
-                            <td>{{ $vente->quantite }}</td>
-                            <td class="montant">{{ number_format($vente->article->prix_vente, 0, ',', ' ') }} F</td>
-                            <td class="montant">{{ number_format($vente->article->prix_vente * $vente->quantite, 0, ',', ' ') }} F</td>
-                        </tr>
-                        @php $totalItems += $vente->article->prix_vente * $vente->quantite; @endphp
-                    @endif
+                @php
+                    $items = json_decode($vente->items, true) ?? [];
+                @endphp
+                @forelse($items as $item)
+                <tr>
+                    <td>{{ $item['nom'] ?? 'Produit' }}</td>
+                    <td class="text-center">{{ $item['quantite'] ?? 1 }}</td>
+                    <td class="text-right">{{ number_format($item['prix'] ?? 0) }} F</td>
+                    <td class="text-right">{{ number_format($item['total'] ?? 0) }} F</td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="4" class="text-center">Aucun article</td>
+                </tr>
+                @endforelse
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" class="text-right font-bold">Sous-total</td>
+                    <td class="text-right">{{ number_format($vente->sous_total ?? 0) }} F</td>
+                </tr>
+                @if(($vente->remise ?? 0) > 0)
+                <tr>
+                    <td colspan="3" class="text-right">Réduction</td>
+                    <td class="text-right" style="color: #DC2626;">- {{ number_format($vente->remise) }} F</td>
+                </tr>
+                @endif
+                @if(($vente->commission ?? 0) > 0)
+                <tr>
+                    <td colspan="3" class="text-right">Commission (5%)</td>
+                    <td class="text-right" style="color: #2563EB;">+ {{ number_format($vente->commission) }} F</td>
+                </tr>
+                @endif
+                @if(($vente->frais_livraison ?? 0) > 0)
+                <tr>
+                    <td colspan="3" class="text-right">Frais livraison</td>
+                    <td class="text-right">{{ number_format($vente->frais_livraison) }} F</td>
+                </tr>
+                @endif
+                @if(($vente->frais_carnet ?? 0) > 0)
+                <tr>
+                    <td colspan="3" class="text-right">Frais carnet</td>
+                    <td class="text-right">{{ number_format($vente->frais_carnet) }} F</td>
+                </tr>
                 @endif
                 <tr class="total-row">
-                    <td colspan="3" style="text-align:right; font-weight:bold;">Sous-total</td>
-                    <td class="montant">{{ number_format($totalItems, 0, ',', ' ') }} F</td>
+                    <td colspan="3" class="text-right">TOTAL À PAYER</td>
+                    <td class="text-right" style="color: #2563EB; font-size: 14px;">
+                        {{ number_format($vente->montant_total ?? 0) }} F
+                    </td>
                 </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODE DE PAIEMENT                            -->
+    <!-- ========================================== -->
+    <div class="page-section">
+        <p class="section-title">💳 MODE DE PAIEMENT : 
+            @if($vente->mode_paiement == 'especes')
+                💵 Comptant
+            @elseif($vente->mode_paiement == 'mobile_money')
+                📱 Mobile Money
+            @else
+                🔄 Tontine
+            @endif
+        </p>
+        <table class="page-table">
+            <tr>
+                <td><strong>Acompte (25%)</strong></td>
+                <td class="text-right">{{ number_format($vente->acompte ?? 0) }} F</td>
+                <td style="color: #16A34A; font-weight: bold;">✅ PAYÉ</td>
+            </tr>
+            <tr>
+                <td><strong>Solde restant</strong></td>
+                <td class="text-right">{{ number_format($vente->solde ?? 0) }} F</td>
+                <td></td>
+            </tr>
+            @if($vente->mode_paiement == 'tontine')
+            <tr>
+                <td><strong>Mensualités ({{ $vente->nb_mensualites ?? 0 }} mois)</strong></td>
+                <td class="text-right">{{ number_format($vente->montant_mensualite ?? 0) }} F/mois</td>
+                <td></td>
+            </tr>
+            @endif
+        </table>
+    </div>
+
+    @if($vente->mode_paiement == 'tontine')
+    <!-- ========================================== -->
+    <!-- ÉCHÉANCES                                   -->
+    <!-- ========================================== -->
+    <div class="page-section">
+        <p class="section-title">📅 ÉCHÉANCES</p>
+        <table class="page-table">
+            <thead>
+                <tr>
+                    <th>N°</th>
+                    <th>Date</th>
+                    <th class="text-right">Montant</th>
+                    <th class="text-center">Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($vente->echeances as $index => $echeance)
+                <tr>
+                    <td>{{ $index + 1 }}</td>
+                    <td>{{ \Carbon\Carbon::parse($echeance->date_echeance)->format('d/m/Y') }}</td>
+                    <td class="text-right">{{ number_format($echeance->montant_dû ?? 0) }} F</td>
+                    <td class="text-center">
+                        @if($echeance->statut == 'payé')
+                            <span style="color: #16A34A; font-weight: bold;">✅ Payé</span>
+                        @elseif($echeance->statut == 'en_retard')
+                            <span style="color: #DC2626; font-weight: bold;">⚠️ En retard</span>
+                        @else
+                            <span style="color: #F59E0B;">⏳ En attente</span>
+                        @endif
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="4" class="text-center">Aucune échéance</td>
+                </tr>
+                @endforelse
             </tbody>
         </table>
+    </div>
+    @endif
 
-        <!-- Récapitulatif complet -->
-        <div class="recap">
-            <div class="recap-item">
-                <span class="label">Sous-total</span>
-                <span class="value">{{ number_format($totalItems, 0, ',', ' ') }} F</span>
+    <!-- ========================================== -->
+    <!-- 💰 COMMISSION TONTINE                       -->
+    <!-- ========================================== -->
+    @if($vente->mode_paiement == 'tontine')
+    <div class="commission-box page-section">
+        <p style="font-weight: bold; margin: 0 0 5px 0; color: #1E40AF; font-size: 13px;">💰 COMMISSION TONTINE</p>
+        <table class="page-table">
+            <tr>
+                <td><strong>Montant de la commande</strong></td>
+                <td class="text-right">{{ number_format($vente->sous_total ?? 0) }} F</td>
+            </tr>
+            <tr style="background: #DBEAFE;">
+                <td><strong>💵 Commission (5%)</strong></td>
+                <td class="text-right" style="color: #2563EB; font-weight: bold; font-size: 13px;">
+                    {{ number_format($vente->commission ?? 0) }} F
+                </td>
+            </tr>
+            <tr>
+                <td><strong>🏦 Montant net à payer</strong></td>
+                <td class="text-right" style="color: #16A34A; font-weight: bold;">
+                    {{ number_format($vente->montant_net ?? 0) }} F
+                </td>
+            </tr>
+        </table>
+    </div>
+    @else
+    <div class="exonere-box page-section">
+        <p style="font-weight: bold; margin: 0 0 5px 0; color: #166534; font-size: 13px;">✅ EXONÉRÉ DE COMMISSION</p>
+        <table class="page-table">
+            <tr>
+                <td><strong>Mode de paiement</strong></td>
+                <td class="text-right" style="color: #16A34A; font-weight: bold;">
+                    @if($vente->mode_paiement == 'especes') 💵 Comptant @else 📱 Mobile Money @endif
+                </td>
+            </tr>
+            <tr>
+                <td><strong>Commission appliquée</strong></td>
+                <td class="text-right" style="color: #16A34A; font-weight: bold;">0 F</td>
+            </tr>
+            <tr>
+                <td><strong>🏦 Montant net à payer</strong></td>
+                <td class="text-right" style="color: #16A34A; font-weight: bold;">
+                    {{ number_format($vente->montant_net ?? 0) }} F
+                </td>
+            </tr>
+        </table>
+    </div>
+    @endif
+
+    <!-- ========================================== -->
+    <!-- 📊 RÉCAPITULATIF COMPLET                    -->
+    <!-- ========================================== -->
+    <div class="recap-box page-section">
+        <p style="font-weight: bold; margin: 0 0 5px 0; color: #166534; font-size: 13px;">📊 RÉCAPITULATIF COMPLET</p>
+        
+        <div class="grid-2">
+            <div>
+                <div class="box">
+                    <p style="font-weight: bold; margin: 0 0 3px 0;">💳 PAIEMENTS</p>
+                    <table style="font-size: 10px;" class="page-table">
+                        <tr><td>Acompte (25%)</td><td class="text-right">{{ number_format($vente->acompte ?? 0) }} F</td></tr>
+                        <tr><td>Solde restant</td><td class="text-right">{{ number_format($vente->solde ?? 0) }} F</td></tr>
+                        @if($vente->mode_paiement == 'tontine')
+                        <tr><td>Mensualités</td><td class="text-right">{{ $vente->nb_mensualites ?? 0 }} mois</td></tr>
+                        <tr><td>Montant/mois</td><td class="text-right">{{ number_format($vente->montant_mensualite ?? 0) }} F</td></tr>
+                        @endif
+                    </table>
+                </div>
             </div>
-            @if(($vente->remise ?? 0) > 0)
-            <div class="recap-item">
-                <span class="label">Remise</span>
-                <span class="value" style="color:#16a34a;">- {{ number_format($vente->remise ?? 0, 0, ',', ' ') }} F</span>
-            </div>
-            @endif
-            @if(($vente->frais_livraison ?? 0) > 0)
-            <div class="recap-item">
-                <span class="label">Frais livraison</span>
-                <span class="value">{{ number_format($vente->frais_livraison ?? 0, 0, ',', ' ') }} F</span>
-            </div>
-            @endif
-            @if(($vente->frais_carnet ?? 0) > 0)
-            <div class="recap-item">
-                <span class="label">Frais carnet</span>
-                <span class="value">{{ number_format($vente->frais_carnet ?? 0, 0, ',', ' ') }} F</span>
-            </div>
-            @endif
-            <div class="recap-item total">
-                <span class="label">TOTAL</span>
-                <span class="value">{{ number_format($vente->montant_total, 0, ',', ' ') }} F</span>
+            <div>
+                <div class="box">
+                    <p style="font-weight: bold; margin: 0 0 3px 0;">💰 COMMISSIONS</p>
+                    <table style="font-size: 10px;" class="page-table">
+                        <tr><td>Mode paiement</td>
+                            <td class="text-right">
+                                @if($vente->mode_paiement == 'especes')
+                                    <span style="color: #16A34A;">💵 Comptant</span>
+                                @elseif($vente->mode_paiement == 'mobile_money')
+                                    <span style="color: #2563EB;">📱 Mobile Money</span>
+                                @else
+                                    <span style="color: #F59E0B;">🔄 Tontine</span>
+                                @endif
+                            </td>
+                        </tr>
+                        @if($vente->mode_paiement == 'tontine')
+                        <tr style="background: #DBEAFE;">
+                            <td>💵 Commission (5%)</td>
+                            <td class="text-right" style="color: #2563EB;">{{ number_format($vente->commission ?? 0) }} F</td>
+                        </tr>
+                        @else
+                        <tr style="background: #F0FDF4;">
+                            <td>✅ Exonéré</td>
+                            <td class="text-right" style="color: #16A34A;">0 F</td>
+                        </tr>
+                        @endif
+                        <tr><td>🏦 Net</td><td class="text-right" style="color: #16A34A;">{{ number_format($vente->montant_net ?? 0) }} F</td></tr>
+                    </table>
+                </div>
             </div>
         </div>
-
-        <!-- Paiement -->
-        <div class="paiement-section">
-            <div class="recap-item">
-                <span class="label">Acompte (1/4)</span>
-                <span class="value">{{ number_format($vente->acompte, 0, ',', ' ') }} F</span>
+        
+        @if($vente->mode_paiement == 'tontine')
+        <div class="grid-2">
+            <div>
+                <div class="box">
+                    <p style="font-weight: bold; margin: 0 0 3px 0;">📅 ÉCHÉANCES</p>
+                    <table style="font-size: 10px;" class="page-table">
+                        <tr><td>Total</td><td class="text-right">{{ $vente->echeances->count() }}</td></tr>
+                        <tr><td style="color: #16A34A;">✅ Payées</td><td class="text-right" style="color: #16A34A;">{{ $vente->echeances->where('statut', 'payé')->count() }}</td></tr>
+                        <tr><td style="color: #F59E0B;">⏳ En attente</td><td class="text-right" style="color: #F59E0B;">{{ $vente->echeances->where('statut', 'en_attente')->count() }}</td></tr>
+                        <tr><td style="color: #DC2626;">⚠️ En retard</td><td class="text-right" style="color: #DC2626;">{{ $vente->echeances->where('statut', 'en_retard')->count() }}</td></tr>
+                    </table>
+                </div>
             </div>
-            <div class="recap-item">
-                <span class="label">Solde restant</span>
-                <span class="value" style="color:#dc2626;">{{ number_format($vente->solde, 0, ',', ' ') }} F</span>
+            <div>
+                <div class="box">
+                    <p style="font-weight: bold; margin: 0 0 3px 0;">📊 TOTAUX</p>
+                    @php
+                        $totalPaye = $vente->echeances()->where('statut', 'payé')->sum('montant_dû') ?? 0;
+                        $totalRestant = ($vente->solde ?? 0) - $totalPaye;
+                        $prochaine = $vente->echeances()->where('statut', 'en_attente')->orderBy('date_echeance')->first();
+                    @endphp
+                    <table style="font-size: 10px;" class="page-table">
+                        <tr><td>Total payé</td><td class="text-right" style="color: #16A34A;">{{ number_format($totalPaye) }} F</td></tr>
+                        <tr><td>Reste à payer</td><td class="text-right" style="color: #DC2626;">{{ number_format($totalRestant) }} F</td></tr>
+                        <tr><td>Prochaine échéance</td><td class="text-right">{{ $prochaine ? \Carbon\Carbon::parse($prochaine->date_echeance)->format('d/m/Y') : '✅ Aucune' }}</td></tr>
+                        <tr><td style="color: #2563EB;">Total commission</td><td class="text-right" style="color: #2563EB;">{{ number_format($vente->commission ?? 0) }} F</td></tr>
+                    </table>
+                </div>
             </div>
-            <div class="recap-item">
-                <span class="label">Mensualites</span>
-                <span class="value">{{ $vente->nb_mensualites }} x {{ number_format($vente->montant_mensualite, 0, ',', ' ') }} F</span>
-            </div>
-            <div class="recap-item">
-                <span class="label">Mode paiement</span>
-                <span class="value">{{ $vente->mode_paiement ?? 'Non renseigné' }}</span>
-            </div>
-            <div class="recap-item" style="border-bottom: none; padding-top: 5px;">
-                <span class="label">Statut</span>
-                <span class="value">
-                    @if($vente->statut == 'en_cours')
-                        <span class="statut-attente">En cours de paiement</span>
-                    @elseif($vente->statut == 'termine')
-                        <span class="statut-paye">Paye</span>
-                    @else
-                        <span class="statut-retard">Annule</span>
-                    @endif
-                </span>
-            </div>
-        </div>
-
-        <!-- Échéances -->
-        @if($vente->echeances->count() > 0)
-        <div style="margin-top:15px; padding:15px; border:1px solid #dbeafe; background:#eff6ff; border-radius:8px;">
-            <h4 style="margin-bottom:10px;">Echeances</h4>
-            <table class="echeances-table" style="width:100%;">
-                <thead>
-                    <tr>
-                        <th style="width:33%;">Date</th>
-                        <th style="width:33%;">Montant</th>
-                        <th style="width:34%;">Statut</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($vente->echeances as $echeance)
-                    <tr>
-                        <td>{{ $echeance->date_echeance->format('d/m/Y') }}</td>
-                        <td class="montant">{{ number_format($echeance->montant_dû, 0, ',', ' ') }} F</td>
-                        <td>
-                            @if($echeance->statut == 'paye')
-                                <span class="statut-paye">Paye</span>
-                            @elseif($echeance->statut == 'en_attente')
-                                <span class="statut-attente">En attente</span>
-                            @else
-                                <span class="statut-retard">En retard</span>
-                            @endif
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
         </div>
         @endif
-
-        <!-- Pied de page -->
-        <div class="footer">
-            <p>Merci pour votre confiance !</p>
-            <p>{{ config('etablissement.nom') }} - {{ config('etablissement.adresse') }}</p>
-            <p>Tel: {{ config('etablissement.telephone') }} | Email: {{ config('etablissement.email') }}</p>
-            <p style="margin-top:5px; font-size:10px; color:#94a3b8;">Facture generee le {{ now()->format('d/m/Y H:i') }}</p>
-        </div>
     </div>
+
+    <!-- ========================================== -->
+    <!-- PIED DE PAGE                                -->
+    <!-- ========================================== -->
+    <div class="footer page-section">
+        <p style="margin: 2px 0;">📱 Contact : 92108545 | 📧 gracelumineuse01@gmail.com</p>
+        <p style="margin: 2px 0; font-weight: bold;">Merci de votre confiance !</p>
+        <p style="margin: 2px 0; font-size: 8px;">Ce document fait foi de contrat de vente à crédit.</p>
+        <p style="margin: 2px 0; font-size: 8px; color: #999;">Facture générée le {{ now()->format('d/m/Y H:i') }}</p>
+    </div>
+
 </body>
 </html>

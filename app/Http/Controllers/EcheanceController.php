@@ -17,21 +17,21 @@ class EcheanceController extends Controller
                             ->orderBy('date_echeance', 'asc')
                             ->get();
         
-        // Statistiques - CORRIGÉ : payé au lieu de paye
+        // Statistiques
         $totalEcheances = $echeances->count();
-        $totalPayees = $echeances->where('statut', 'payé')->count();
-        $totalAttente = $echeances->where('statut', 'en_attente')->count();
-        $totalRetard = $echeances->where('statut', 'en_retard')->count();
-        $montantTotalDu = $echeances->where('statut', '!=', 'payé')->sum('montant_dû');
+        $totalPayees = $echeances->where('statut', Echeance::STATUT_PAYE)->count();
+        $totalAttente = $echeances->where('statut', Echeance::STATUT_EN_ATTENTE)->count();
+        $totalRetard = $echeances->where('statut', Echeance::STATUT_EN_RETARD)->count();
+        $montantTotalDu = $echeances->where('statut', '!=', Echeance::STATUT_PAYE)->sum('montant_dû');
         
         // Échéances du jour
         $echeancesAujourdhui = $echeances->filter(function($e) {
-            return $e->date_echeance->isToday() && $e->statut != 'payé';
+            return $e->date_echeance->isToday() && $e->statut != Echeance::STATUT_PAYE;
         });
         
         // Échéances en retard
         $echeancesRetard = $echeances->filter(function($e) {
-            return $e->date_echeance->isPast() && $e->statut != 'payé';
+            return $e->date_echeance->isPast() && $e->statut != Echeance::STATUT_PAYE;
         });
         
         // Ventes avec leurs échéances pour une vue groupée
@@ -68,30 +68,35 @@ class EcheanceController extends Controller
     public function marquerPayee(Echeance $echeance)
     {
         $echeance->update([
-            'statut' => 'payé',  // CORRIGÉ : avec accent
-            'date_paiement' => today()
+            'statut' => Echeance::STATUT_PAYE,
+            'date_paiement' => now()
         ]);
 
+        // Vérifier si toutes les échéances de la vente sont payées
         $vente = $echeance->vente;
-        $echeancesRestantes = $vente->echeances()->where('statut', '!=', 'payé')->count();
+        $echeancesRestantes = $vente->echeances()->where('statut', '!=', Echeance::STATUT_PAYE)->count();
         
         if ($echeancesRestantes == 0) {
             $vente->update(['statut' => 'termine']);
         }
 
-        return redirect()->route('echeances.index')->with('success', '✅ Paiement enregistré !');
+        return redirect()->back()->with('success', '✅ Échéance payée avec succès !');
     }
 
     public function marquerRetard(Echeance $echeance)
     {
-        $echeance->update(['statut' => 'en_retard']);
-        return redirect()->route('echeances.index')->with('success', '⚠️ Échéance marquée en retard.');
+        $echeance->update([
+            'statut' => Echeance::STATUT_EN_RETARD
+        ]);
+        return redirect()->back()->with('success', '⚠️ Échéance marquée en retard.');
     }
 
     public function marquerAttente(Echeance $echeance)
     {
-        $echeance->update(['statut' => 'en_attente']);
-        return redirect()->route('echeances.index')->with('success', '🔄 Échéance remise en attente.');
+        $echeance->update([
+            'statut' => Echeance::STATUT_EN_ATTENTE
+        ]);
+        return redirect()->back()->with('success', '🔄 Échéance remise en attente.');
     }
 
     public function exportCSV()
@@ -113,7 +118,7 @@ class EcheanceController extends Controller
                 $e->vente->numero_vente ?? 'N/A',
                 $e->montant_dû,
                 $e->date_echeance->format('d/m/Y'),
-                $e->statut == 'payé' ? 'Payé' : ($e->statut == 'en_attente' ? 'En attente' : 'En retard'),
+                $e->statut_label,
                 $e->date_paiement ? $e->date_paiement->format('d/m/Y') : '-'
             ]);
         }

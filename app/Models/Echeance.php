@@ -7,15 +7,27 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Echeance extends Model
 {
+    // ========== CONSTANTES DE STATUT ==========
+    const STATUT_PAYE = 'paye';
+    const STATUT_EN_ATTENTE = 'en_attente';
+    const STATUT_EN_RETARD = 'en_retard';
+
     protected $fillable = [
-        'vente_id', 'client_id', 'date_echeance',
-        'montant_dû', 'statut', 'date_paiement'
+        'vente_id',
+        'client_id',
+        'date_echeance',
+        'montant_dû',
+        'statut',
+        'date_paiement',
+        'notes',
     ];
 
     protected $casts = [
         'date_echeance' => 'date',
         'date_paiement' => 'date',
     ];
+
+    // ========== RELATIONS ==========
 
     public function vente(): BelongsTo
     {
@@ -27,20 +39,47 @@ class Echeance extends Model
         return $this->belongsTo(Client::class);
     }
 
-    public function estEnRetard(): bool
+    // ========== SCOPES ==========
+
+    public function scopePaye($query)
     {
-        return $this->statut === 'en_attente' && $this->date_echeance < now();
+        return $query->where('statut', self::STATUT_PAYE);
     }
 
-    // Sauvegarde automatique après chaque modification
-    protected static function booted()
+    public function scopeEnAttente($query)
     {
-        static::saved(function ($model) {
-            \App\Http\Controllers\BackupController::autoBackup();
-        });
-        
-        static::deleted(function ($model) {
-            \App\Http\Controllers\BackupController::autoBackup();
-        });
+        return $query->where('statut', self::STATUT_EN_ATTENTE);
+    }
+
+    public function scopeEnRetard($query)
+    {
+        return $query->where('statut', self::STATUT_EN_RETARD);
+    }
+
+    // ========== ATTRIBUTS ==========
+
+    public function getMontantDuFormatAttribute()
+    {
+        return number_format($this->montant_dû, 0, ',', ' ') . ' F';
+    }
+
+    public function getStatutBadgeAttribute()
+    {
+        $badges = [
+            self::STATUT_PAYE => '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">✅ Payé</span>',
+            self::STATUT_EN_ATTENTE => '<span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-sm">⏳ En attente</span>',
+            self::STATUT_EN_RETARD => '<span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm">⚠️ En retard</span>',
+        ];
+        return $badges[$this->statut] ?? $badges[self::STATUT_EN_ATTENTE];
+    }
+
+    public function getStatutLabelAttribute()
+    {
+        $labels = [
+            self::STATUT_PAYE => 'Payé',
+            self::STATUT_EN_ATTENTE => 'En attente',
+            self::STATUT_EN_RETARD => 'En retard',
+        ];
+        return $labels[$this->statut] ?? 'En attente';
     }
 }

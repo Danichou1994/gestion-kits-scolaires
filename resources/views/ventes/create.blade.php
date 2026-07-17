@@ -27,15 +27,13 @@
             </div>
 
             <div>
-                <label class="block text-gray-700 mb-2">Mode paiement</label>
-                <select name="mode_paiement" class="w-full border rounded-lg px-3 py-2">
-                    <option value="">Sélectionner</option>
-                    <option value="especes">Espèces</option>
-                    <option value="mobile_money">Mobile Money</option>
-                    <option value="cheque">Chèque</option>
-                    <option value="virement">Virement</option>
-                    <option value="carte">Carte bancaire</option>
+                <label class="block text-gray-700 mb-2">Mode de paiement *</label>
+                <select name="mode_paiement" id="mode_paiement" class="w-full border rounded-lg px-3 py-2" required>
+                    <option value="tontine" {{ old('mode_paiement') == 'tontine' ? 'selected' : '' }}>🔄 Tontine (5% commission)</option>
+                    <option value="especes" {{ old('mode_paiement') == 'especes' ? 'selected' : '' }}>💵 Comptant (sans commission)</option>
+                    <option value="mobile_money" {{ old('mode_paiement') == 'mobile_money' ? 'selected' : '' }}>📱 Mobile Money</option>
                 </select>
+                <p class="text-sm text-gray-500 mt-1">⚠️ La commission de 5% s'applique uniquement pour les paiements en tontine</p>
             </div>
         </div>
 
@@ -103,7 +101,7 @@
             <textarea name="notes" class="w-full border rounded-lg px-3 py-2" rows="2"></textarea>
         </div>
 
-        <!-- Récapitulatif des prix (sans TVA) -->
+        <!-- Récapitulatif des prix -->
         <div class="bg-gray-50 rounded-lg p-4 mt-4">
             <h4 class="font-bold text-lg mb-2">💰 Récapitulatif</h4>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -225,7 +223,15 @@
         const remise = parseFloat(document.getElementById('remise').value) || 0;
         const fraisLivraison = parseFloat(document.getElementById('frais_livraison').value) || 0;
         const fraisCarnet = parseFloat(document.getElementById('frais_carnet').value) || 0;
-        const totalFinal = sousTotal - remise + fraisLivraison + fraisCarnet;
+        
+        // 🔥 NOUVEAU CALCUL : Commission 5% UNIQUEMENT pour tontine
+        const modePaiement = document.getElementById('mode_paiement').value;
+        let commission = 0;
+        if (modePaiement === 'tontine') {
+            commission = sousTotal * 0.05;
+        }
+        
+        const totalFinal = sousTotal - remise + commission + fraisLivraison + fraisCarnet;
 
         document.getElementById('sous_total_display').textContent = sousTotal.toLocaleString() + ' F';
         document.getElementById('remise_display').textContent = remise.toLocaleString() + ' F';
@@ -240,6 +246,8 @@
         document.getElementById('items_input').value = JSON.stringify(itemsData);
     }
 
+    // Écouter les changements du mode de paiement
+    document.getElementById('mode_paiement').addEventListener('change', calculerTotaux);
     document.getElementById('remise').addEventListener('input', calculerTotaux);
     document.getElementById('frais_livraison').addEventListener('input', calculerTotaux);
     document.getElementById('frais_carnet').addEventListener('input', calculerTotaux);
