@@ -105,7 +105,7 @@ class VenteController extends Controller
             $montant_commande = $sous_total;
 
             if ($mode_paiement == 'tontine') {
-                $commission = $montant_commande * 0.05;
+                $commission = $montant_commande * 0.10;
                 $montant_final = $montant_commande - $remise + $commission + $frais_livraison + $frais_carnet;
             } else {
                 $commission = 0;
@@ -296,7 +296,7 @@ class VenteController extends Controller
             $montant_commande = $sous_total;
 
             if ($mode_paiement == 'tontine') {
-                $commission = $montant_commande * 0.05;
+                $commission = $montant_commande * 0.10;
                 $montant_final = $montant_commande - $remise + $commission + $frais_livraison + $frais_carnet;
             } else {
                 $commission = 0;

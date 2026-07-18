@@ -324,12 +324,13 @@
                     </td>
                 </tr>
                 @if($vente->mode_paiement == 'tontine')
-                <tr class="border-b bg-blue-100">
-                    <td class="p-2"><strong>💵 Commission tontine (5%)</strong></td>
-                    <td class="p-2 text-right text-blue-600 font-bold text-lg">
-                        {{ number_format($vente->commission ?? 0) }} F
-                    </td>
-                </tr>
+                <!-- 💰 COMMISSION TONTINE -->
+<tr class="border-b bg-blue-100">
+    <td class="p-2"><strong>💵 Commission tontine (10%)</strong></td>
+    <td class="p-2 text-right text-blue-600 font-bold text-lg">
+        {{ number_format($vente->commission ?? 0) }} F
+    </td>
+</tr>
                 @else
                 <tr class="border-b bg-green-50">
                     <td class="p-2"><strong>✅ Exonéré (paiement comptant)</strong></td>
@@ -396,7 +397,7 @@
                         </tr>
                         @if($vente->mode_paiement == 'tontine')
                         <tr class="border-b bg-blue-50">
-                            <td class="py-1 font-bold text-blue-700">💵 Commission (5%)</td>
+                            <td class="py-1 font-bold text-blue-700">💵 Commission (10%)</td>
                             <td class="py-1 text-right font-bold text-blue-600">{{ number_format($vente->commission ?? 0) }} F</td>
                         </tr>
                         @else

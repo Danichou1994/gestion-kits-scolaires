@@ -408,11 +408,11 @@
                 <td class="text-right">{{ number_format($vente->sous_total ?? 0) }} F</td>
             </tr>
             <tr style="background: #DBEAFE;">
-                <td><strong>💵 Commission (5%)</strong></td>
-                <td class="text-right" style="color: #2563EB; font-weight: bold; font-size: 13px;">
-                    {{ number_format($vente->commission ?? 0) }} F
-                </td>
-            </tr>
+    <td><strong>💵 Commission (10%)</strong></td>
+    <td class="text-right" style="color: #2563EB; font-weight: bold; font-size: 13px;">
+        {{ number_format($vente->commission ?? 0) }} F
+    </td>
+</tr>
             <tr>
                 <td><strong>🏦 Montant net à payer</strong></td>
                 <td class="text-right" style="color: #16A34A; font-weight: bold;">

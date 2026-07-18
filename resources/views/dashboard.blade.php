@@ -39,9 +39,9 @@
         <div class="text-2xl font-bold">{{ number_format($chiffreAffaires ?? 0, 0, ',', ' ') }} F</div>
     </div>
     <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow p-6 text-white">
-        <div class="text-sm opacity-80">💵 Ma commission (5%)</div>
-        <div class="text-2xl font-bold">{{ number_format($totalCommission ?? 0, 0, ',', ' ') }} F</div>
-    </div>
+    <div class="text-sm opacity-80">💵 Ma commission (10%)</div>
+    <div class="text-2xl font-bold">{{ number_format($totalCommission ?? 0, 0, ',', ' ') }} F</div>
+</div>
     <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow p-6 text-white">
         <div class="text-sm opacity-80">🏦 Net établissement</div>
         <div class="text-2xl font-bold">{{ number_format($totalNet ?? 0, 0, ',', ' ') }} F</div>

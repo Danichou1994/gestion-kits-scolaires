@@ -28,12 +28,12 @@
 
             <div>
                 <label class="block text-gray-700 mb-2">Mode de paiement *</label>
-                <select name="mode_paiement" id="mode_paiement" class="w-full border rounded-lg px-3 py-2" required>
-                    <option value="tontine" {{ old('mode_paiement') == 'tontine' ? 'selected' : '' }}>🔄 Tontine (5% commission)</option>
-                    <option value="especes" {{ old('mode_paiement') == 'especes' ? 'selected' : '' }}>💵 Comptant (sans commission)</option>
-                    <option value="mobile_money" {{ old('mode_paiement') == 'mobile_money' ? 'selected' : '' }}>📱 Mobile Money</option>
-                </select>
-                <p class="text-sm text-gray-500 mt-1">⚠️ La commission de 5% s'applique uniquement pour les paiements en tontine</p>
+               <select name="mode_paiement" id="mode_paiement" class="w-full border rounded-lg px-3 py-2" required>
+               <option value="tontine" {{ old('mode_paiement') == 'tontine' ? 'selected' : '' }}>🔄 Tontine (10% commission)</option>
+               <option value="especes" {{ old('mode_paiement') == 'especes' ? 'selected' : '' }}>💵 Comptant (sans commission)</option>
+               <option value="mobile_money" {{ old('mode_paiement') == 'mobile_money' ? 'selected' : '' }}>📱 Mobile Money</option>
+               </select>
+               <p class="text-sm text-gray-500 mt-1">⚠️ La commission de 10% s'applique uniquement pour les paiements en tontine</p>
             </div>
         </div>
 
@@ -224,11 +224,11 @@
         const fraisLivraison = parseFloat(document.getElementById('frais_livraison').value) || 0;
         const fraisCarnet = parseFloat(document.getElementById('frais_carnet').value) || 0;
         
-        // 🔥 NOUVEAU CALCUL : Commission 5% UNIQUEMENT pour tontine
+        // 🔥 NOUVEAU CALCUL : Commission 10% UNIQUEMENT pour tontine
         const modePaiement = document.getElementById('mode_paiement').value;
         let commission = 0;
         if (modePaiement === 'tontine') {
-            commission = sousTotal * 0.05;
+            commission = sousTotal * 0.10;
         }
         
         const totalFinal = sousTotal - remise + commission + fraisLivraison + fraisCarnet;
