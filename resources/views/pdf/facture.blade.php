@@ -29,7 +29,6 @@
             break-inside: avoid !important;
         }
         
-        /* Pour les tableaux longs */
         table {
             page-break-inside: auto !important;
             break-inside: auto !important;
@@ -295,7 +294,7 @@
                 @endif
                 @if(($vente->commission ?? 0) > 0)
                 <tr>
-                    <td colspan="3" class="text-right">Commission (5%)</td>
+                    <td colspan="3" class="text-right">Commission (10%)</td>
                     <td class="text-right" style="color: #2563EB;">+ {{ number_format($vente->commission) }} F</td>
                 </tr>
                 @endif
@@ -335,6 +334,7 @@
             @endif
         </p>
         <table class="page-table">
+            @if($vente->mode_paiement == 'tontine')
             <tr>
                 <td><strong>Acompte (25%)</strong></td>
                 <td class="text-right">{{ number_format($vente->acompte ?? 0) }} F</td>
@@ -345,20 +345,23 @@
                 <td class="text-right">{{ number_format($vente->solde ?? 0) }} F</td>
                 <td></td>
             </tr>
-            @if($vente->mode_paiement == 'tontine')
             <tr>
                 <td><strong>Mensualités ({{ $vente->nb_mensualites ?? 0 }} mois)</strong></td>
                 <td class="text-right">{{ number_format($vente->montant_mensualite ?? 0) }} F/mois</td>
                 <td></td>
             </tr>
+            @else
+            <tr>
+                <td><strong>Montant total</strong></td>
+                <td class="text-right">{{ number_format($vente->montant_total ?? 0) }} F</td>
+                <td style="color: #16A34A; font-weight: bold;">✅ PAYÉ</td>
+            </tr>
             @endif
         </table>
     </div>
 
+    {{-- 🔥 ÉCHÉANCES UNIQUEMENT POUR TONTINE --}}
     @if($vente->mode_paiement == 'tontine')
-    <!-- ========================================== -->
-    <!-- ÉCHÉANCES                                   -->
-    <!-- ========================================== -->
     <div class="page-section">
         <p class="section-title">📅 ÉCHÉANCES</p>
         <table class="page-table">
@@ -396,9 +399,7 @@
     </div>
     @endif
 
-    <!-- ========================================== -->
-    <!-- 💰 COMMISSION TONTINE                       -->
-    <!-- ========================================== -->
+    {{-- 🔥 COMMISSION UNIQUEMENT POUR TONTINE --}}
     @if($vente->mode_paiement == 'tontine')
     <div class="commission-box page-section">
         <p style="font-weight: bold; margin: 0 0 5px 0; color: #1E40AF; font-size: 13px;">💰 COMMISSION TONTINE</p>
@@ -408,32 +409,10 @@
                 <td class="text-right">{{ number_format($vente->sous_total ?? 0) }} F</td>
             </tr>
             <tr style="background: #DBEAFE;">
-    <td><strong>💵 Commission (10%)</strong></td>
-    <td class="text-right" style="color: #2563EB; font-weight: bold; font-size: 13px;">
-        {{ number_format($vente->commission ?? 0) }} F
-    </td>
-</tr>
-            <tr>
-                <td><strong>🏦 Montant net à payer</strong></td>
-                <td class="text-right" style="color: #16A34A; font-weight: bold;">
-                    {{ number_format($vente->montant_net ?? 0) }} F
+                <td><strong>💵 Commission (10%)</strong></td>
+                <td class="text-right" style="color: #2563EB; font-weight: bold; font-size: 13px;">
+                    {{ number_format($vente->commission ?? 0) }} F
                 </td>
-            </tr>
-        </table>
-    </div>
-    @else
-    <div class="exonere-box page-section">
-        <p style="font-weight: bold; margin: 0 0 5px 0; color: #166534; font-size: 13px;">✅ EXONÉRÉ DE COMMISSION</p>
-        <table class="page-table">
-            <tr>
-                <td><strong>Mode de paiement</strong></td>
-                <td class="text-right" style="color: #16A34A; font-weight: bold;">
-                    @if($vente->mode_paiement == 'especes') 💵 Comptant @else 📱 Mobile Money @endif
-                </td>
-            </tr>
-            <tr>
-                <td><strong>Commission appliquée</strong></td>
-                <td class="text-right" style="color: #16A34A; font-weight: bold;">0 F</td>
             </tr>
             <tr>
                 <td><strong>🏦 Montant net à payer</strong></td>
@@ -456,11 +435,14 @@
                 <div class="box">
                     <p style="font-weight: bold; margin: 0 0 3px 0;">💳 PAIEMENTS</p>
                     <table style="font-size: 10px;" class="page-table">
+                        @if($vente->mode_paiement == 'tontine')
                         <tr><td>Acompte (25%)</td><td class="text-right">{{ number_format($vente->acompte ?? 0) }} F</td></tr>
                         <tr><td>Solde restant</td><td class="text-right">{{ number_format($vente->solde ?? 0) }} F</td></tr>
-                        @if($vente->mode_paiement == 'tontine')
                         <tr><td>Mensualités</td><td class="text-right">{{ $vente->nb_mensualites ?? 0 }} mois</td></tr>
                         <tr><td>Montant/mois</td><td class="text-right">{{ number_format($vente->montant_mensualite ?? 0) }} F</td></tr>
+                        @else
+                        <tr><td>Montant total</td><td class="text-right">{{ number_format($vente->montant_total ?? 0) }} F</td></tr>
+                        <tr><td style="color: #16A34A;">✅ Payé</td><td class="text-right" style="color: #16A34A;">Oui</td></tr>
                         @endif
                     </table>
                 </div>
@@ -482,7 +464,7 @@
                         </tr>
                         @if($vente->mode_paiement == 'tontine')
                         <tr style="background: #DBEAFE;">
-                            <td>💵 Commission (5%)</td>
+                            <td>💵 Commission (10%)</td>
                             <td class="text-right" style="color: #2563EB;">{{ number_format($vente->commission ?? 0) }} F</td>
                         </tr>
                         @else
@@ -497,6 +479,7 @@
             </div>
         </div>
         
+        {{-- 🔥 ÉCHÉANCES DANS RÉCAPITULATIF - UNIQUEMENT POUR TONTINE --}}
         @if($vente->mode_paiement == 'tontine')
         <div class="grid-2">
             <div>

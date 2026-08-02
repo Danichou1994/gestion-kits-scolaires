@@ -113,11 +113,20 @@ class VenteController extends Controller
             }
             $montantNet = $montant_final;
 
-            $numero = Vente::genererNumero();
-            $acompte = $montant_final / 4;
-            $solde = $montant_final - $acompte;
-            $nb_mensualites = $request->nb_mensualites ?? 3;
-            $montant_mensualite = $solde / $nb_mensualites;
+           $numero = Vente::genererNumero();
+
+// 🔥 Acompte et solde UNIQUEMENT pour Tontine
+if ($mode_paiement == 'tontine') {
+    $acompte = $montant_final / 4;
+    $solde = $montant_final - $acompte;
+    $nb_mensualites = $request->nb_mensualites ?? 3;
+    $montant_mensualite = $solde / $nb_mensualites;
+} else {
+    $acompte = $montant_final;   // Paiement comptant = total
+    $solde = 0;
+    $nb_mensualites = 0;
+    $montant_mensualite = 0;
+}
 
             $vente = Vente::create([
                 'numero_vente' => $numero,
@@ -304,10 +313,18 @@ class VenteController extends Controller
             }
             $montantNet = $montant_final;
 
-            $acompte = $montant_final / 4;
-            $solde = $montant_final - $acompte;
-            $nb_mensualites = $request->nb_mensualites ?? 3;
-            $montant_mensualite = $solde / $nb_mensualites;
+         // 🔥 Acompte et solde UNIQUEMENT pour Tontine
+if ($mode_paiement == 'tontine') {
+    $acompte = $montant_final / 4;
+    $solde = $montant_final - $acompte;
+    $nb_mensualites = $request->nb_mensualites ?? 3;
+    $montant_mensualite = $solde / $nb_mensualites;
+} else {
+    $acompte = $montant_final;
+    $solde = 0;
+    $nb_mensualites = 0;
+    $montant_mensualite = 0;
+}
 
             // Mettre à jour la vente
             $vente->update([
